@@ -483,16 +483,16 @@ def error_067_ref_after_dot(text):
 def error_069_isbn_wrong_syntax(text):
     """Corrects some cases and returns (new_text, replacements_count) tuple."""
     # colon after ISBN
-    (text, fixed1) = re.subn(r"ISBN(?:[- ]?1[03])?\s*:\s*(\d)", "ISBN \\1", text, flags=re.I)
+    (text, count1) = re.subn(r"ISBN(?:[- ]?1[03])?\s*:\s*(\d)", "ISBN \\1", text, flags=re.I)
     # "-" insted of space or lack of space
-    (text, fixed2) = re.subn(r"ISBN-?((?:[0-9X]-?){10})", "ISBN \\1", text, flags=re.I)
+    (text, count2) = re.subn(r"ISBN-?((?:[0-9X]-?){10})", "ISBN \\1", text, flags=re.I)
     # two or more spaces
-    (text, fixed3) = re.subn(r"ISBN[ ]{2,}(\d)", "ISBN \\1", text, flags=re.I)
+    (text, count3) = re.subn(r"ISBN[ ]{2,}(\d)", "ISBN \\1", text, flags=re.I)
     # "10-" or "13-" prefixes (minor)
     text = re.sub(r"(?:1[03]-)ISBN (\d)", "ISBN \\1", text, flags=re.I)
     # ISBN in lower case (minor)
     text = re.sub(r"ISBN (\d)", "ISBN \\1", text, flags=re.I)
-    return (text, fixed1 + fixed2 + fixed3)
+    return (text, count1 + count2 + count3)
 
 def error_070_wrong_length(text):
     """Fixes using russian Х/х instead of english X."""
