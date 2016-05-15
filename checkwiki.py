@@ -370,6 +370,14 @@ def error_048_title_link_in_text(text):
 
 error_048_title_link_in_text.title = None
 
+def error_050_mnemonic_dash(text):
+    """
+    Fixes the error and returns (new_text, replacements_count) tuple.
+    """
+    (text, count1) = re.subn("&ndash;", "–", text, flags=re.I)
+    (text, count2) = re.subn("&mdash;", "—", text, flags=re.I)
+    return (text, count1 + count2)
+
 def error_052_category_in_article(text):
     """Corrects all wrong categories and returns (new_text, fixed_errors_cont) tuple."""
     ignore_filter = re.compile(r"""(
@@ -494,7 +502,7 @@ def error_069_isbn_wrong_syntax(text):
     text = re.sub(r"ISBN (\d)", "ISBN \\1", text, flags=re.I)
     return (text, count1 + count2 + count3)
 
-def error_070_wrong_length(text):
+def error_070_isbn_wrong_length(text):
     """Fixes using russian Х/х instead of english X."""
     (text, count1) = re.subn(r"ISBN ((?:[0-9]-?){9})Х", "ISBN \\1X", text, flags=re.I)
     (text, count2) = re.subn(r"(\|isbn\s*=\s*)((?:[0-9]-?){9})Х", "\\1\\2X", text, flags=re.I)
@@ -653,11 +661,15 @@ ENABLED_ERRORS = [
     error_048_title_link_in_text,
     error_064_link_equal_linktext,
 
+    # isbn
+    error_069_isbn_wrong_syntax,
+    error_070_isbn_wrong_length,
+
     # other, must be after 002
     error_054_list_with_br,
     error_065_image_desc_with_br,
-    error_069_isbn_wrong_syntax,
-    error_070_wrong_length,
+
+    error_050_mnemonic_dash,
     error_088_dsort_with_spaces,
     error_104_quote_marks_in_refs,
     # error_067_ref_after_dot,
