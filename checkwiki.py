@@ -249,8 +249,8 @@ def error_001_template_with_keyword(text):
 
 def error_002_br_tag(text):
     """Corrects some cases and returns (new_text, replacements_count) tuple."""
-    (text, correct) = re.subn("(<br />)", "\\1", text)
-    (text, fixed) = re.subn(r"<[/\\]?br *[/\\]?>", "<br />", text)
+    (text, correct) = re.subn(r"(<br(?: /)?>)", "\\1", text)
+    (text, fixed) = re.subn(r"<[/\\]?br *[/\\]?>", "<br>", text)
     return (text, fixed - correct)
 
 def error_009_category_without_br(text):
@@ -490,6 +490,9 @@ def error_067_ref_after_dot(text):
 
 def error_069_isbn_wrong_syntax(text):
     """Corrects some cases and returns (new_text, replacements_count) tuple."""
+    ignore_filter = re.compile(r"""(https?://[^ ]+)""", re.I)
+    (text, ignored) = ignore(text, ignore_filter)
+
     # colon after ISBN
     (text, count1) = re.subn(r"ISBN(?:[- ]?1[03])?\s*:\s*(\d)", "ISBN \\1", text, flags=re.I)
     # "-" insted of space or lack of space
@@ -500,6 +503,8 @@ def error_069_isbn_wrong_syntax(text):
     text = re.sub(r"(?:1[03]-)ISBN (\d)", "ISBN \\1", text, flags=re.I)
     # ISBN in lower case (minor)
     text = re.sub(r"ISBN (\d)", "ISBN \\1", text, flags=re.I)
+
+    text = deignore(text, ignored)
     return (text, count1 + count2 + count3)
 
 def error_070_isbn_wrong_length(text):
