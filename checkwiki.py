@@ -250,7 +250,7 @@ def error_001_template_with_keyword(text):
 def error_002_br_tag(text):
     """Corrects some cases and returns (new_text, replacements_count) tuple."""
     (text, correct) = re.subn(r"(<br(?: /)?>)", "\\1", text)
-    (text, fixed) = re.subn(r"<[/\\]?br *[/\\]?>", "<br>", text)
+    (text, fixed) = re.subn(r"<[/\\]?br *[/\\]?>", "<br />", text)
     return (text, fixed - correct)
 
 def error_009_category_without_br(text):
