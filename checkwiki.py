@@ -407,7 +407,11 @@ def error_052_category_in_article(text):
     # we must to insert categories before interwikis
     prefix = text[:insert_pos].rstrip()
     interwikis = text[insert_pos:]
-    text = prefix + "\n\n" + "".join(categories) + "\n" + interwikis
+
+    if prefix.strip() == "": # page consists of categories only. Possible for Category: namespace
+        text = "".join(categories) + "\n" + interwikis
+    else:
+        text = prefix + "\n\n" + "".join(categories) + "\n" + interwikis
     text = text.rstrip() + "\n"
 
     return (text, count)
