@@ -625,6 +625,8 @@ def minor_fixes_after(text):
     text = re.sub(r"\{\{reflist(?!\+)", "{{примечания", text, flags=re.I)
     text = re.sub(r"\{\{список примечаний", "{{примечания", text, flags=re.I)
 
+    text = re.sub(r" +(\{\{ref-[a-z]+\}\})", "\\1", text)
+
     text = re.sub(r"\{\{(?:удар|ударение|stress|')\}\}", "{{подст:удар}}", text, flags=re.I)
 
     return (text, 0)
