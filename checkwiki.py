@@ -1,16 +1,20 @@
 """
-Pywikipedia bot, which automatically fixes various errors from WikiProject CheckWiki.
-Full list of errors see in ENABLED_ERRORS list.
+Pywikipedia bot, which automatically fixes various errors from WikiProject
+CheckWiki. Full list of errors see in ENABLED_ERRORS list.
 Adapted for ruwiki. Do not use this bot on another wikis!
 
 Using as script:
     python checkwiki.py [keys_or_params ...]
-Keys changes bot condition, so next parameters will be processed with another rules.
+Keys changes bot condition, so next parameters will be processed with another
+rules.
 There are 6 available keys:
-    --maj: it's neccessary to send fixed page only if it have at least one major fix [default]
-    --min: it's neccessary to send fixed page if it have at least one fix (maybe minor)
+    --maj: it's neccessary to send fixed page only if it have at least one
+major fix [default]
+    --min: it's neccessary to send fixed page if it have at least one fix
+(maybe minor)
     --p: next parameters are titles of the Wikipedia pages [default]
-    --f: next parameters are names of the files, which contains titles of the pages
+    --f: next parameters are names of the files, which contains titles of the
+pages
     --s: next parameters are numbers of the errors which is neccessary to fix
     --t: also process test page (see TEST_PAGE constant)
 For example:
@@ -45,6 +49,8 @@ See process_page() function help for more information.
         checkwiki.mark_error_list_done(fixed_errors, page.title())
 See the corresponding functions help for more information.
 """
+
+HELP_STRING = __doc__[:__doc__.index("\n\nUsing as module")]
 
 import re
 import sys
@@ -699,7 +705,7 @@ MAJOR_ERRORS = {
     "80": "ссылок",
     "86": "ссылок",
     "90": "ссылок",
-    "91": "ссылок",
+    # "91": "ссылок",
     "93": "ссылок",
     "104": "сносок"
 }
@@ -907,6 +913,10 @@ def process_list(site, titles, force_minor=False, log_needed=True):
 
 def main():
     """Parses console parameters and fixes corresponding pages."""
+    if len(sys.argv) == 1:
+        print(HELP_STRING)
+        return
+
     site = pywikibot.Site()
 
     source = "title"
