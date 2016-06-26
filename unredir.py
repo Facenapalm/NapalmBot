@@ -18,22 +18,6 @@ MESSAGE = "Исправление редиректов в навшаблоне."
 SHORT_FINDER = re.compile(r"\[\[([^\]\|\n]+)[\|\]]")
 LINK_FINDER = re.compile(r"\[\[([^\]\|\n]+)(?:\|([^\]\|\n]+))?\]\]")
 
-IGNORE_FILTER = re.compile(r"""(
-    <!--.*?-->|
-
-    <nowiki>.*?</nowiki>|
-    <nowiki\s*/>|
-
-    <source>.*?</source>|
-    <tt>.*?</tt>|
-    <code>.*?</code>|
-    <pre>.*?</pre>|
-    <syntaxhighlight[^>]*>.*?</syntaxhighlight>|
-
-    <templatedata>.*?</templatedata>|
-    <imagemap>.*?</imagemap>
-)""", re.I | re.DOTALL | re.VERBOSE)
-
 def unredir_template(site, name, text):
     """
     Fixes all redirects in text if:
@@ -49,7 +33,7 @@ def unredir_template(site, name, text):
 
     Returns string - new text.
     """
-    (text, ignored) = checkwiki.ignore(text, IGNORE_FILTER)
+    (text, ignored) = checkwiki.ignore(text, checkwiki.IGNORE_FILTER)
 
     count = {}
     redir_dest = {}
