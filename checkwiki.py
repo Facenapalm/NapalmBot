@@ -75,6 +75,25 @@ MODULE = r"(?:module|модуль)\s*:"
 
 EXTLINK_REGEXP = re.compile(r"\[https?://[^\n\]]+\]", flags=re.I)
 
+IGNORE_FILTER = re.compile(r"""(
+    <!--.*?-->|
+
+    <nowiki>.*?</nowiki>|
+    <nowiki\s*/>|
+
+    <math>.*?</math>|
+    <hiero>.*?</hiero>|
+
+    <source>.*?</source>|
+    <tt>.*?</tt>|
+    <code>.*?</code>|
+    <pre>.*?</pre>|
+    <syntaxhighlight[^>]*>.*?</syntaxhighlight>|
+
+    <templatedata>.*?</templatedata>|
+    <imagemap>.*?</imagemap>
+)""", re.I | re.DOTALL | re.VERBOSE)
+
 # also see ENABLED_ERRORS and MAJOR_ERRORS lists in #main section
 
 # stdlib addiction
@@ -320,7 +339,7 @@ def error_017_category_dublicate(text):
 
 def error_021_category_in_english(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"\[\[сategory\s*:", "[[Категория:", text, flags=re.I)
+    return re.subn(r"\[\[category\s*:", "[[Категория:", text, flags=re.I)
 
 def error_022_category_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -697,7 +716,7 @@ ENABLED_ERRORS = [
 MAJOR_ERRORS = {
     "42": "устаревших тегов",
     # "44": "заголовков",
-    "48": "ссылок",
+    # "48": "ссылок",
     # "57": "заголовков",
     "62": "ссылок",
     "69": "ISBN",
@@ -769,23 +788,7 @@ def process_text(text, title=None):
     Ignores text inside comments and tags:
     <nowiki>, <source>, <tt>, <code>, <pre>, <syntaxhighlight>, <templatedata>
     """
-    ignore_filter = re.compile(r"""(
-        <!--.*?-->|
-
-        <nowiki>.*?</nowiki>|
-        <nowiki\s*/>|
-
-        <source>.*?</source>|
-        <tt>.*?</tt>|
-        <code>.*?</code>|
-        <pre>.*?</pre>|
-        <syntaxhighlight[^>]*>.*?</syntaxhighlight>|
-
-        <templatedata>.*?</templatedata>|
-        <imagemap>.*?</imagemap>
-    )""", re.I | re.DOTALL | re.VERBOSE)
-
-    (text, ignored) = ignore(text, ignore_filter)
+    (text, ignored) = ignore(text, IGNORE_FILTER)
     (text, fixed_errors) = process_text_unsafe(text, title)
     text = deignore(text, ignored)
 
