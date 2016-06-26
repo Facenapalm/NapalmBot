@@ -274,8 +274,8 @@ def error_001_template_with_keyword(text):
 
 def error_002_br_tag(text):
     """Corrects some cases and returns (new_text, replacements_count) tuple."""
-    (text, correct) = re.subn(r"(<br(?: /)?>)", "\\1", text)
-    (text, fixed) = re.subn(r"<[/\\]?br *[/\\]?>", "<br />", text)
+    (text, correct) = re.subn(r"(<br(?: /)?>)", "\\1", text, flags=re.I)
+    (text, fixed) = re.subn(r"<[/\\]?br *[/\\]?>", "<br />", text, flags=re.I)
     return (text, fixed - correct)
 
 def error_009_category_without_br(text):
@@ -350,6 +350,12 @@ def error_022_category_with_spaces(text):
 def error_026_bold_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
     return re.subn(r"</?(?:b|strong)>", "'''", text, flags=re.I)
+
+def error_032_link_two_pipes(text):
+    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    (text, count1) = re.subn(r"\[\[([^\|\[\]\n]+)\|\|([^\|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
+    (text, count2) = re.subn(r"\[\[([^\|\[\]\n]+)\|([^\|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
+    return (text, count1 + count2)
 
 def error_038_italic_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -694,6 +700,7 @@ ENABLED_ERRORS = [
 
     # links, must be after external links
     error_103_pipe_in_wikilink,
+    error_032_link_two_pipes,
     error_048_title_link_in_text,
     error_064_link_equal_linktext,
 
@@ -714,6 +721,7 @@ ENABLED_ERRORS = [
 ]
 
 MAJOR_ERRORS = {
+    "32": "ссылок",
     "42": "устаревших тегов",
     # "44": "заголовков",
     # "48": "ссылок",
