@@ -50,14 +50,14 @@ See process_page() function help for more information.
 See the corresponding functions help for more information.
 """
 
-HELP_STRING = __doc__[:__doc__.index("\n\nUsing as module")]
-
 import re
 import sys
 from urllib.parse import unquote, urlencode
 from urllib.request import urlopen
 
 import pywikibot
+
+HELP_STRING = __doc__[:__doc__.index("\n\nUsing as module")]
 
 # customization
 
@@ -69,11 +69,9 @@ TEST_PAGE = "Википедия:Песочница"
 
 IMAGE = r"(?:файл|file|изображение|image)\s*:"
 CATEGORY = r"(?:категория|к|category)\s*:"
-# "c:"" also means "category:", but [[c:smth]] is a link to commons
+# "c:" also means "category:", but [[c:smth]] is a link to commons
 TEMPLATE = r"(?:шаблон|ш|template|t)\s*:"
 MODULE = r"(?:module|модуль)\s*:"
-
-EXTLINK_REGEXP = re.compile(r"\[https?://[^\n\]]+\]", flags=re.I)
 
 IGNORE_FILTER = re.compile(r"""(
     <!--.*?-->|
@@ -95,6 +93,8 @@ IGNORE_FILTER = re.compile(r"""(
 )""", re.I | re.DOTALL | re.VERBOSE)
 
 # also see ENABLED_ERRORS and MAJOR_ERRORS lists in #main section
+
+FIX_UNSAFE_EXTLINKS = False
 
 # stdlib addiction
 
@@ -144,7 +144,6 @@ def compare_links(link1, link2):
 
 def decode_link(link):
     """Decodes encoded links, such as "%D0%A1#.D0.B2"."""
-
     new_link = process_link_whitespace(link)
     new_link = allsub(r"(#.*?)\.([0-9A-F]{2})", "\\1%\\2", new_link)
     new_link = unquote(new_link)
@@ -167,7 +166,6 @@ def process_external_link(match_obj):
 
     Returns string.
     """
-
     code = match_obj.group(1)
     (link, success) = decode_link(match_obj.group(2))
     if not success:
@@ -202,7 +200,6 @@ def process_link_as_external(text, lang_code=LANG_CODE):
     Replaces all links to wikipedia on language, matching lang_code regexp, with a wikilinks.
     Used in 90 and 91 errors.
     """
-
     lang_code = "(" + lang_code + ")"
     prefix = r"\[https?://" + lang_code + r"\.(?:m\.)?wikipedia\.org/(?:w|wiki)/"
     suffix = r"\]"
@@ -210,12 +207,13 @@ def process_link_as_external(text, lang_code=LANG_CODE):
     count_before = len(re.findall(prefix, text))
 
     exp1 = prefix + r"([^\[\]\|?=]+)\|([^\[\]\|]+)" + suffix # [wp/Example Article|text]
-    exp2 = prefix + r"([^\[\]\| ?=]+) ([^\[\]\|]+)" + suffix # [wp/Example_Article text]
-    exp3 = prefix + r"([^\[\]\|?=]+)" + suffix # [wp/Example_Article]
-
     text = re.sub(exp1, process_external_link, text, flags=re.I)
+    exp2 = prefix + r"([^\[\]\| ?=]+) ([^\[\]\|]+)" + suffix # [wp/Example_Article text]
     text = re.sub(exp2, process_external_link, text, flags=re.I)
-    text = re.sub(exp3, process_external_link, text, flags=re.I)
+
+    if FIX_UNSAFE_EXTLINKS:
+        exp3 = prefix + r"([^\[\]\|?=]+)" + suffix # [wp/Example_Article]
+        text = re.sub(exp3, process_external_link, text, flags=re.I)
 
     count_after = len(re.findall(prefix, text))
 
@@ -236,6 +234,7 @@ def ignore(text, ignore_filter):
     """
     ignored = []
     count = 0
+
     def _ignore_line(match_obj):
         """Replaces founded text with special label."""
         #pylint: disable=undefined-variable
@@ -246,6 +245,7 @@ def ignore(text, ignore_filter):
         old_count = count
         count += 1
         return LABEL_PREFIX + str(old_count) + LABEL_SUFFIX
+
     text = re.sub(LABEL_PREFIX + r"(\d+)" + LABEL_SUFFIX, _ignore_line, text)
     text = ignore_filter.sub(_ignore_line, text)
     return (text, ignored)
@@ -264,6 +264,7 @@ def deignore(text, ignored):
         """Replaces founded label with corresponding text."""
         index = int(match_obj.group(1))
         return ignored[index]
+
     return re.sub(LABEL_PREFIX + r"(\d+)" + LABEL_SUFFIX, _deignore_line, text)
 
 # errors
@@ -459,21 +460,23 @@ def error_059_template_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
     br_finder = re.compile(r"[ ]*<br />[ ]*(?=\n?\s*(?:\||\}\}))")
 
-    ignore_regexp = re.compile(r"(\[\[.*?\]\]|\{\|.*?\|\})", re.DOTALL)
     # pipes can be also used in tables and wikilinks
     # we shouldn't detect these uses (expecially tables)
-    splited_text = ignore_regexp.split(text)
-    fixed_all = 0
-    for i in range(0, len(splited_text), 2):
-        (splited_text[i], fixed_now) = br_finder.subn(r"", splited_text[i])
-        fixed_all += fixed_now
-    text = "".join(splited_text)
+    ignore_filter = re.compile(r"(\[\[.*?\]\]|\{\|.*?\|\})", re.DOTALL)
+    (text, ignored) = ignore(text, ignore_filter)
+    (text, count) = br_finder.subn(r"", text)
+    text = deignore(text, ignored)
 
-    return (text, fixed_all)
+    return (text, count)
 
 def error_062_url_without_http(text):
     """Fixes the error in refs and returns (new_text, replacements_count) tuple."""
     return re.subn(r"(<ref.*?>)\s*(\[?)\s*www\.", "\\1\\2http://www.", text)
+
+def error_063_small_tag_in_refs(text):
+    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    regexp = r"(<(ref|su[bp])[^>]*>)<small>([^<>]+)</small>(</\2>)"
+    return re.subn(regexp, "\\1\\3\\4", text, flags=re.I)
 
 def error_064_link_equal_linktext(text):
     """
@@ -518,6 +521,7 @@ def error_065_image_desc_with_br(text):
 
 def error_067_ref_after_dot(text):
     """
+    [WARNING: dangerous to use without manual control]
     Fixes references after dots, commas, colons and semicolons.
     Returns (new_text, replacements_count) tuple.
     """
@@ -622,7 +626,6 @@ def minor_fixes_before(text):
     Fixes some minor defects. Automatically called before standart filters.
     Always returns (new_text, 0) tuple.
     """
-
     text = allsub(r"\n[ ]+\n", "\n\n", text) # spaces in the empty line
 
     # headers:
@@ -633,7 +636,8 @@ def minor_fixes_before(text):
 
     text = re.sub(r"^(\*+)([^ *#:])", "\\1 \\2", text) # spaces in lists
 
-    (text, ignored) = ignore(text, EXTLINK_REGEXP)
+    extlink_regexp = re.compile(r"\[https?://[^\n\]]+\]", flags=re.I)
+    (text, ignored) = ignore(text, extlink_regexp)
     link_decoder = lambda x: decode_link(x.group(0))[0]
     text = re.sub(r"\[\[[^\[\]\|]+\|", link_decoder, text) # encoded links
     text = deignore(text, ignored)
@@ -645,7 +649,6 @@ def minor_fixes_after(text):
     Fixes some minor defects. Automatically called after standart filters.
     Always returns (new_text, 0) tuple.
     """
-
     text = re.sub(r"(\[\[:?)" + CATEGORY + r"(\s*)", "\\1Категория:", text, flags=re.I)
     text = re.sub(r"(\[\[:?)" + MODULE + r"(\s*)", "\\1Модуль:", text, flags=re.I)
     text = re.sub(r"(\[\[:?)" + TEMPLATE + r"(\s*)", "\\1Шаблон:", text, flags=re.I)
@@ -715,7 +718,7 @@ ENABLED_ERRORS = [
     error_050_mnemonic_dash,
     error_088_dsort_with_spaces,
     error_104_quote_marks_in_refs,
-    # error_067_ref_after_dot,
+    error_063_small_tag_in_refs,
 
     minor_fixes_after
 ]
