@@ -1,32 +1,27 @@
 """
 Pywikipedia bot, which automatically fixes various errors from WikiProject
-CheckWiki. Full list of errors see in ENABLED_ERRORS list.
-Adapted for ruwiki. Do not use this bot on another wikis!
+CheckWiki. Full list of errors see in ENABLED_ERRORS constant.
+Adapted for ruwiki. Do not use this bot on other wikis!
 
 Using as script:
     python checkwiki.py [keys_or_params ...]
 Keys changes bot condition, so next parameters will be processed with another
 rules.
 There are 6 available keys:
-    --maj: it's neccessary to send fixed page only if it have at least one
-major fix [default]
-    --min: it's neccessary to send fixed page if it have at least one fix
-(maybe minor)
+    --maj: send fixed page only if it have at least one major fix [default]
+    --min: send fixed page if it have at least one fix (maybe minor)
     --p: next parameters are titles of the Wikipedia pages [default]
-    --f: next parameters are names of the files, which contains titles of the
-pages
+    --f: next parameters are names of the files, which contains page titles
     --s: next parameters are numbers of the errors which is neccessary to fix
     --t: also process test page (see TEST_PAGE constant)
 For example:
     python checkwiki.py Example1 Example2 --f pages.txt
-Process "Example1" and "Example2" pages and all pages from "pages.txt" file
+Process "Example1" and "Example2" pages and all pages from "pages.txt" file.
 
 Using as module...
 ... on high level:
     import checkwiki
-
     # here you can modify ENABLED_ERRORS and MAJOR_ERRORS lists
-
     checkwiki.process_page("Example")
 See process_page() function help for more information.
 
@@ -276,12 +271,12 @@ def error_001_template_with_keyword(text):
 def error_002_br_tag(text):
     """Corrects some cases and returns (new_text, replacements_count) tuple."""
     (text, correct) = re.subn(r"(<br(?: /)?>)", "\\1", text, flags=re.I)
-    (text, fixed) = re.subn(r"<[/\\]?br *[/\\]?>", "<br />", text, flags=re.I)
+    (text, fixed) = re.subn(r"<[/\\]?br[ ]*[/\\]?>", "<br />", text, flags=re.I)
     return (text, fixed - correct)
 
 def error_009_category_without_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    (text, no_after) = re.subn(r"(\[\[категория:.*?\]\] *)([^ \n])", "\\1\n\\2", text, flags=re.I)
+    (text, no_after) = re.subn(r"(\[\[категория:.*?\]\][ ]*)([^ \n])", "\\1\n\\2", text, flags=re.I)
     (text, no_before) = re.subn(r"([^\n])(\[\[категория:.*?\]\])", "\\1\n\\2", text, flags=re.I)
     return (text, no_after + no_before)
 
@@ -422,7 +417,7 @@ def error_052_category_in_article(text):
     )""", re.I | re.DOTALL | re.VERBOSE)
     (text, ignored) = ignore(text, ignore_filter)
 
-    category_finder = r"\[\[Категория:[^\[\]\n]+\]\] *\n"
+    category_finder = r"\[\[Категория:[^\[\]\n]+\]\][ ]*\n"
     wrong_category_finder = category_finder + "(?=.*\n==)"
 
     # count wrong categories
@@ -453,7 +448,7 @@ def error_052_category_in_article(text):
 
 def error_054_list_with_br(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
-    return allsubn(r"^(\*.*)<br /> *$", "\\1", text, flags=re.M)
+    return allsubn(r"^(\*.*)<br />[ ]*$", "\\1", text, flags=re.M)
 
 def error_057_headline_with_colon(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -541,19 +536,17 @@ def error_069_isbn_wrong_syntax(text):
     (text, count2) = re.subn(r"ISBN-?((?:[0-9X]-?){10})", "ISBN \\1", text, flags=re.I)
     # two or more spaces
     (text, count3) = re.subn(r"ISBN[ ]{2,}(\d)", "ISBN \\1", text, flags=re.I)
-    # "10-" or "13-" prefixes (minor)
-    text = re.sub(r"(?:1[03]-)ISBN (\d)", "ISBN \\1", text, flags=re.I)
+    # "10-" or "13-" prefixes
+    (text, count4) = re.subn(r"(?:1[03]-)ISBN (\d)", "ISBN \\1", text, flags=re.I)
     # ISBN in lower case (minor)
     text = re.sub(r"ISBN (\d)", "ISBN \\1", text, flags=re.I)
 
     text = deignore(text, ignored)
-    return (text, count1 + count2 + count3)
+    return (text, count1 + count2 + count3 + count4)
 
 def error_070_isbn_wrong_length(text):
     """Fixes using russian Х/х instead of english X."""
-    (text, count1) = re.subn(r"ISBN ((?:[0-9]-?){9})Х", "ISBN \\1X", text, flags=re.I)
-    (text, count2) = re.subn(r"(\|isbn\s*=\s*)((?:[0-9]-?){9})Х", "\\1\\2X", text, flags=re.I)
-    return (text, count1 + count2)
+    return re.subn(r"((?:ISBN |\|isbn\s*=\s*)(?:[0-9]-?){9})Х", "\\1X", text, flags=re.I)
 
 def error_080_ext_link_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
