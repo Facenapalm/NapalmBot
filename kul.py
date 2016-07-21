@@ -17,6 +17,8 @@ TEXT_AFTER = ".</center>}}<noinclude>[[Категория:Навигационн
 
 LIST_LEN = 5
 
+COMMENT = "Обновление списка статей."
+
 def main():
     """Updates article list in {{Случайные статьи с КУЛ}} template."""
     site = pywikibot.Site()
@@ -32,7 +34,7 @@ def main():
 
     template = pywikibot.Page(site, TEMPLATE_NAME)
     template.text = text
-    template.save("Обновление списка статей.")
+    template.save(COMMENT, minor=False)
 
 if __name__ == "__main__":
     main()
