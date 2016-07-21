@@ -32,7 +32,7 @@ def linkify_heading(text):
     Converts heading text to link part, which goes after #.
     For example: "== [[Something|head]]''ing'' ==" -> "heading".
     """
-    text = re.sub(r"\[\[(?:[^|]*\|)?([^\]]*)\]\]", "\\1", text)
+    text = re.sub(r"\[\[:?(?:[^|]*\|)?([^\]]*)\]\]", "\\1", text)
     text = re.sub(r"'''(.+?)'''", "\\1", text)
     text = re.sub(r"''(.+?)''", "\\1", text)
     text = re.sub(r"[ ]{2,}", " ", text)
@@ -42,7 +42,7 @@ def linkify_heading(text):
 def find_heading(code, node):
     """Finds first second-level heading before the node."""
     index = code.index(node, recursive=True)
-    for heading in code.nodes[index::-1]:
+    for heading in list(code.nodes)[index::-1]:
         if not isinstance(heading, mwparserfromhell.nodes.heading.Heading):
             continue
         if heading.level != 2:
