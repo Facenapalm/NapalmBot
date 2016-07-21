@@ -1,6 +1,7 @@
 """
 Pywikipedia bot, which automatically fixes various errors from WikiProject
 CheckWiki. Full list of errors see in ENABLED_ERRORS constant.
+Written in python 3.5, compatibility with older versions doesn't tested.
 Adapted for ruwiki. Do not use this bot on other wikis!
 
 Using as script:
@@ -234,7 +235,7 @@ def ignore(text, ignore_filter):
         """Replaces founded text with special label."""
         #pylint: disable=undefined-variable
         nonlocal ignored
-        ignored += [match_obj.group(0)]
+        ignored.append(match_obj.group(0))
 
         nonlocal count
         old_count = count
@@ -607,6 +608,10 @@ def error_093_double_http(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
     return re.subn(r"https?:/?/?(?=https?://)", "", text, flags=re.I)
 
+def error_101_sup_in_numbers(text):
+    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    return re.subn(r"(\d)<sup>(st|nd|rd|th)</sup>", "\\1\\2", text, flags=re.I)
+
 def error_103_pipe_in_wikilink(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
     return re.subn(r"(\[\[[^\]\|\n]+){{!}}([^\]\|\n]+\]\])", "\\1|\\2", text)
@@ -713,6 +718,7 @@ ENABLED_ERRORS = [
 
     error_050_mnemonic_dash,
     error_088_dsort_with_spaces,
+    error_101_sup_in_numbers,
     error_104_quote_marks_in_refs,
     error_063_small_tag_in_refs,
 
@@ -756,7 +762,7 @@ def mark_error_done(error_num, page_name):
     if error_num == "0":
         return
 
-    params = {"project": PROJECT, "view": "detail", "id": error_num, "title": str(page_name)}
+    params = {"project": PROJECT, "view": "detail", "id": error_num, "title": page_name}
     urlopen(CHECKWIKI_URL + urlencode(params)).read()
 
 def mark_error_list_done(error_list, page_name):
@@ -786,7 +792,7 @@ def process_text_unsafe(text, title=None):
     for error in ENABLED_ERRORS:
         (text, count) = error(text)
         if count > 0:
-            fixed_errors += [get_error_num(error)]
+            fixed_errors.append(get_error_num(error))
     return (text, fixed_errors)
 
 def process_text(text, title=None):
@@ -824,7 +830,7 @@ def get_comment(fixes_list, extra_comment_parts=None):
 
     for fix in fixes_list:
         if fix in MAJOR_ERRORS:
-            comment_parts += [MAJOR_ERRORS[fix]]
+            comment_parts.append(MAJOR_ERRORS[fix])
     comment_parts = unique(comment_parts)
 
     if comment_parts == []:
@@ -882,17 +888,19 @@ def process_page(page, force_minor=False):
 
 def log(title, errlist=None, success=True):
     """Prints log line to console, for example, "Portal Stories: Mel - [1, 2, 10] ... ok"."""
-    if success:
-        state = "ok"
-    else:
-        state = "fail"
+    title = title.strip()
 
     if errlist is None or errlist == []:
         list_string = ""
     else:
         list_string = " - [" + ", ".join(errlist) + "]"
 
-    pywikibot.output(title.strip() + list_string + " ... " + state, toStdout=True)
+    if success:
+        state = "ok"
+    else:
+        state = "fail"
+
+    pywikibot.output(title + list_string + " ... " + state, toStdout=True)
 
 def process_list(site, titles, force_minor=False, log_needed=True):
     """
@@ -951,7 +959,7 @@ def main():
                 process_list(site, list(listfile), force_minor)
         elif source == "server":
             process_list(site, load_page_list(arg), force_minor)
-        else:
+        elif source == "title":
             process_list(site, [arg], force_minor)
 
 if __name__ == "__main__":
