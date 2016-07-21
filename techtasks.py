@@ -50,13 +50,26 @@ def find_heading(code, node):
         return heading
     return None
 
+def log(done, count):
+    """Writes information about progress."""
+    format_str = "Processed {done} out of {count} pages ({percentage} %)."
+    if count == 0:
+        percentage = 100
+    else:
+        percentage = round(100 * done / count)
+    print(format_str.format(done=done, count=count, percentage=percentage))
+
 def main():
     """Updates list of technical tasks."""
     site = pywikibot.Site()
+    category = pywikibot.Category(site, CATEGORY_NAME)
+    pages = list(category.members())
+
+    count = len(pages)
+    done = 0
 
     templates = []
-    category = pywikibot.Category(site, CATEGORY_NAME)
-    for page in category.members():
+    for page in pages:
         text = page.text
         code = mwparserfromhell.parse(text)
         link_prefix = page.title()
@@ -78,6 +91,10 @@ def main():
 
             line = RESULT_FORMAT.format(params=params, link=link)
             templates.append((line, sortkey))
+
+        done += 1
+        log(done, count)
+
     templates.sort(key=lambda template: template[1], reverse=SORT_REVERSE)
 
     lines = []
