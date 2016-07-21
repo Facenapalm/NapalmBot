@@ -13,11 +13,15 @@ import mwparserfromhell
 CATEGORY_NAME = "Категория:Википедия:Обсуждения с нерешёнными техническими задачами"
 TEMPLATE_NAME = "техзадача"
 DONE_PARAM = "выполнено"
+SORT_PARAM = "дата"
+DEFAULT_SORTKEY = "0000-00-00"
 
 RESULT_PAGE = "Проект:Технические работы/Задачи из обсуждений"
 RESULT_BEGINNING = "{{/шапка}}"
 RESULT_FORMAT = "{{{{/задача|{params}|ссылка={link}}}}}"
 RESULT_ENDING = "{{/подвал}}"
+
+COMMENT = "Автоматическое обновление списка техзадач."
 
 TEMPLATE_REGEXP = r"^\{\{\s*" + TEMPLATE_NAME + r"\s*\|"
 
@@ -44,14 +48,11 @@ def find_heading(code, node):
         return heading
     return None
 
-
 def main():
     """Updates list of technical tasks."""
     site = pywikibot.Site()
 
-    lines = []
-    lines.append(RESULT_BEGINNING)
-
+    templates = []
     category = pywikibot.Category(site, CATEGORY_NAME)
     for page in category.members():
         text = page.text
@@ -69,15 +70,23 @@ def main():
                 heading = str(heading.title)
                 link = link_prefix + "#" + linkify_heading(heading)
 
-            line = RESULT_FORMAT.format(params=params, link=link)
-            lines.append(line)
+            sortkey = DEFAULT_SORTKEY
+            if template.has(SORT_PARAM, ignore_empty=True):
+                sortkey = template.get(SORT_PARAM).value.strip()
 
+            line = RESULT_FORMAT.format(params=params, link=link)
+            templates.append((line, sortkey))
+    templates.sort(key=lambda template: template[1])
+
+    lines = []
+    lines.append(RESULT_BEGINNING)
+    lines += [template[0] for template in templates]
     lines.append(RESULT_ENDING)
     text = "\n".join(lines)
 
     page = pywikibot.Page(site, RESULT_PAGE)
     page.text = text
-    page.save("Автоматическое обновление списка техзадач.")
+    page.save(COMMENT, minor=False)
 
 if __name__ == "__main__":
     main()
