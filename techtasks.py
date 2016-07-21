@@ -13,8 +13,10 @@ import mwparserfromhell
 CATEGORY_NAME = "Категория:Википедия:Обсуждения с нерешёнными техническими задачами"
 TEMPLATE_NAME = "техзадача"
 DONE_PARAM = "выполнено"
+
 SORT_PARAM = "дата"
 DEFAULT_SORTKEY = "0000-00-00"
+SORT_REVERSE = True
 
 RESULT_PAGE = "Проект:Технические работы/Задачи из обсуждений"
 RESULT_BEGINNING = "{{/шапка}}"
@@ -76,7 +78,7 @@ def main():
 
             line = RESULT_FORMAT.format(params=params, link=link)
             templates.append((line, sortkey))
-    templates.sort(key=lambda template: template[1])
+    templates.sort(key=lambda template: template[1], reverse=SORT_REVERSE)
 
     lines = []
     lines.append(RESULT_BEGINNING)
