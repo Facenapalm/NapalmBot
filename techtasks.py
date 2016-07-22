@@ -25,7 +25,20 @@ RESULT_ENDING = "{{/подвал}}"
 
 COMMENT = "Автоматическое обновление списка техзадач."
 
+LOG_FORMAT = "Processed {done} out of {count} pages ({percentage} %)."
+
 TEMPLATE_REGEXP = r"^\{\{\s*" + TEMPLATE_NAME + r"\s*\|"
+
+def find_heading(code, node):
+    """Finds first second-level heading before the node."""
+    index = code.index(node, recursive=True)
+    for heading in list(code.nodes)[index::-1]:
+        if not isinstance(heading, mwparserfromhell.nodes.heading.Heading):
+            continue
+        if heading.level != 2:
+            continue
+        return heading
+    return None
 
 def linkify_heading(text):
     """
@@ -39,39 +52,24 @@ def linkify_heading(text):
     text = text.strip()
     return text
 
-def find_heading(code, node):
-    """Finds first second-level heading before the node."""
-    index = code.index(node, recursive=True)
-    for heading in list(code.nodes)[index::-1]:
-        if not isinstance(heading, mwparserfromhell.nodes.heading.Heading):
-            continue
-        if heading.level != 2:
-            continue
-        return heading
-    return None
-
 def log(done, count):
     """Writes information about progress."""
-    format_str = "Processed {done} out of {count} pages ({percentage} %)."
     if count == 0:
         percentage = 100
     else:
         percentage = round(100 * done / count)
-    print(format_str.format(done=done, count=count, percentage=percentage))
+    print(LOG_FORMAT.format(done=done, count=count, percentage=percentage))
 
 def main():
     """Updates list of technical tasks."""
     site = pywikibot.Site()
-    category = pywikibot.Category(site, CATEGORY_NAME)
-    pages = list(category.members())
-
+    pages = list(pywikibot.Category(site, CATEGORY_NAME).members())
     count = len(pages)
-    done = 0
 
     templates = []
-    for page in pages:
-        text = page.text
-        code = mwparserfromhell.parse(text)
+    for done, page in enumerate(pages):
+        log(done, count)
+        code = mwparserfromhell.parse(page.text)
         link_prefix = page.title()
         for template in code.filter_templates(matches=TEMPLATE_REGEXP):
             if template.has(DONE_PARAM, ignore_empty=True):
@@ -85,26 +83,24 @@ def main():
                 heading = str(heading.title)
                 link = link_prefix + "#" + linkify_heading(heading)
 
-            sortkey = DEFAULT_SORTKEY
             if template.has(SORT_PARAM, ignore_empty=True):
                 sortkey = template.get(SORT_PARAM).value.strip()
+            else:
+                sortkey = DEFAULT_SORTKEY
 
             line = RESULT_FORMAT.format(params=params, link=link)
             templates.append((line, sortkey))
 
-        done += 1
-        log(done, count)
-
+    log(count, count)
     templates.sort(key=lambda template: template[1], reverse=SORT_REVERSE)
 
     lines = []
     lines.append(RESULT_BEGINNING)
     lines += [template[0] for template in templates]
     lines.append(RESULT_ENDING)
-    text = "\n".join(lines)
 
     page = pywikibot.Page(site, RESULT_PAGE)
-    page.text = text
+    page.text = "\n".join(lines)
     page.save(COMMENT, minor=False)
 
 if __name__ == "__main__":
