@@ -606,7 +606,7 @@ def error_091_interwiki_link_as_ext(text):
 
 def error_093_double_http(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"https?:/?/?(?=https?://)", "", text, flags=re.I)
+    return allsubn(r"https?:/?/?(?=https?://)", "", text, flags=re.I)
 
 def error_101_sup_in_numbers(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
