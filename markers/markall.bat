@@ -1,0 +1,1 @@
+for %%f in (mark_error_*.py) do python %%f
