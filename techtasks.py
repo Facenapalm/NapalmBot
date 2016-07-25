@@ -9,6 +9,7 @@ Usage:
 import re
 import pywikibot
 import mwparserfromhell
+from checkwiki import ignore, deignore
 
 CATEGORY_NAME = "Категория:Википедия:Обсуждения с нерешёнными техническими задачами"
 TEMPLATE_NAME = "техзадача"
@@ -28,6 +29,7 @@ COMMENT = "Автоматическое обновление списка тех
 LOG_FORMAT = "Processed {done} out of {count} pages ({percentage} %)."
 
 TEMPLATE_REGEXP = r"^\{\{\s*" + TEMPLATE_NAME + r"\s*\|"
+IGNORE_FILTER = r"<nowiki>(.*?)</nowiki>|<nowiki\s*/>"
 
 def find_heading(code, node):
     """Finds first second-level heading before the node."""
@@ -40,14 +42,34 @@ def find_heading(code, node):
         return heading
     return None
 
+def encode_string(text):
+    """Replaces special symbols by its codes."""
+    return text
+        .replace("<", "%3C")
+        .replace(">", "%3E")
+        .replace("[", "%5B")
+        .replace("]", "%5D")
+        .replace("{", "%7B")
+        .replace("}", "%7D")
+        .replace("|", "%7C")
+
 def linkify_heading(text):
     """
     Converts heading text to link part, which goes after #.
     For example: "== [[Something|head]]''ing'' ==" -> "heading".
     """
+    (text, ignored) = ignore(text, IGNORE_FILTER)
+    text = re.sub(r"<!--.*?-->", "", text)
     text = re.sub(r"\[\[:?(?:[^|]*\|)?([^\]]*)\]\]", "\\1", text)
+    text = re.sub(r"\[https?://[^ \]]+ ([^\]]+)\]", "\\1", text)
     text = re.sub(r"'''(.+?)'''", "\\1", text)
     text = re.sub(r"''(.+?)''", "\\1", text)
+    text = re.sub(r"<[a-z]+(?:\s*[a-z]+\s*=[^<>]+)?\s*/?>|</[a-z]+>", "", text, flags=re.I)
+    text = deignore(text, ignored)
+
+    text = re.sub(IGNORE_FILTER, "\\1", text)
+    text = encode_string(text)
+
     text = re.sub(r"[ ]{2,}", " ", text)
     text = text.strip()
     return text
