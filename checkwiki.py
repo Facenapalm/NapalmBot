@@ -224,10 +224,13 @@ def ignore(text, ignore_filter):
 
     Parameters:
         text - text to be processed;
-        ignore_filter - compiled regular expression.
+        ignore_filter - compiled regular expression or string with regexp.
 
     Returns (new_text, deleted_text_list) tuple.
     """
+    if isinstance(ignore_filter, str):
+        ignore_filter = re.compile(ignore_filter, flags=re.I | re.DOTALL)
+
     ignored = []
     count = 0
 
