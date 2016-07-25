@@ -44,14 +44,14 @@ def find_heading(code, node):
 
 def encode_string(text):
     """Replaces special symbols by its codes."""
+    text = text.replace("<", "%3C")
+    text = text.replace(">", "%3E")
+    text = text.replace("[", "%5B")
+    text = text.replace("]", "%5D")
+    text = text.replace("{", "%7B")
+    text = text.replace("}", "%7D")
+    text = text.replace("|", "%7C")
     return text
-        .replace("<", "%3C")
-        .replace(">", "%3E")
-        .replace("[", "%5B")
-        .replace("]", "%5D")
-        .replace("{", "%7B")
-        .replace("}", "%7D")
-        .replace("|", "%7C")
 
 def linkify_heading(text):
     """
