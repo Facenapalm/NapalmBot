@@ -1,6 +1,7 @@
 """
 Script updates list of technical tasks in russian Wikipedia.
 Written in python 3.5, compatibility with older versions doesn't tested.
+Uses checkwiki.py module.
 
 Usage:
     python techtasks.py
