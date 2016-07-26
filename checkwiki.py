@@ -156,7 +156,6 @@ def decode_link(link):
     else:
         return (new_link, True)
 
-
 def process_external_link(match_obj):
     """
     Converts external link to a wiki-link.
@@ -365,6 +364,10 @@ def error_032_link_two_pipes(text):
     (text, count1) = re.subn(r"\[\[([^\|\[\]\n]+)\|\|([^\|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
     (text, count2) = re.subn(r"\[\[([^\|\[\]\n]+)\|([^\|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
     return (text, count1 + count2)
+
+def error_034_template_elements(text):
+    """Fixes pagename magicwords and returns (new_text, replacements_count) tuple."""
+    return re.subn(r"{{(NAMESPACE|SITENAME|PAGENAME|FULLPAGENAME)}}", "{{subst:\\1}}", text)
 
 def error_038_italic_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -690,6 +693,7 @@ ENABLED_ERRORS = [
 
     # templates, must be after 002
     error_001_template_with_keyword,
+    error_034_template_elements,
     error_059_template_with_br,
 
     # headlines, must me after 026
@@ -711,7 +715,7 @@ ENABLED_ERRORS = [
     error_017_category_dublicate,
     error_052_category_in_article,
 
-    # links, must be after external links
+    # links, must be after external links and 034
     error_103_pipe_in_wikilink,
     error_032_link_two_pipes,
     error_048_title_link_in_text,
@@ -726,10 +730,10 @@ ENABLED_ERRORS = [
     error_065_image_desc_with_br,
 
     error_050_mnemonic_dash,
+    error_063_small_tag_in_refs,
     error_088_dsort_with_spaces,
     error_101_sup_in_numbers,
     error_104_quote_marks_in_refs,
-    error_063_small_tag_in_refs,
 
     minor_fixes_after
 ]
