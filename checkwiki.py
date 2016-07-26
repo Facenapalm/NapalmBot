@@ -375,7 +375,7 @@ def error_038_italic_tag(text):
 
 def error_042_strike_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"(</?)strike", "\\1s", text, flags=re.I)
+    return re.subn(r"(</?)strike>", "\\1s>", text, flags=re.I)
 
 def error_044_headline_with_bold(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
