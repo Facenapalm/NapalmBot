@@ -138,10 +138,16 @@ def compare_links(link1, link2):
     else:
         return unificate_link(link1) == unificate_link(link2)
 
+DATE_REGEXP = r"(?:0?[1-9]|[12]\d|3[01])\.(?:0?[1-9]|1[0-2])\.\d{4}"
+
 def decode_link(link):
     """Decodes encoded links, such as "%D0%A1#.D0.B2"."""
     new_link = process_link_whitespace(link)
+
+    (new_link, ignored) = ignore(new_link, DATE_REGEXP)
     new_link = allsub(r"(#.*?)\.([0-9A-F]{2})", "\\1%\\2", new_link)
+    new_link = deignore(new_link, ignored)
+
     new_link = unquote(new_link)
 
     if "\ufffd" in new_link:
@@ -784,30 +790,24 @@ def load_page_list(error_num, offset=0):
         return []
     return data.group(1).strip().split("\n")
 
-def process_text_unsafe(text, title=None):
+def process_text(text, title=None):
     """
-    Fixes all errors from ENABLED_ERRORS list and returns (new_text, fixed_errors_list) tuple.
-    Unsafe: can modify text inside comments, <nowiki> tags, etc.
+    Fixes all errors from ENABLED_ERRORS and returns (new_text, fixed_errors_list) tuple.
+    Ignores text inside comments and tags:
+    <nowiki>, <source>, <tt>, <code>, <pre>, <syntaxhighlight>, <templatedata>
+    (see IGNORE_FILTER regexp)
     """
     error_048_title_link_in_text.title = title
+
+    (text, ignored) = ignore(text, IGNORE_FILTER)
 
     fixed_errors = []
     for error in ENABLED_ERRORS:
         (text, count) = error(text)
         if count > 0:
             fixed_errors.append(get_error_num(error))
-    return (text, fixed_errors)
 
-def process_text(text, title=None):
-    """
-    Fixes all errors from ENABLED_ERRORS and returns (new_text, fixed_errors_list) tuple.
-    Ignores text inside comments and tags:
-    <nowiki>, <source>, <tt>, <code>, <pre>, <syntaxhighlight>, <templatedata>
-    """
-    (text, ignored) = ignore(text, IGNORE_FILTER)
-    (text, fixed_errors) = process_text_unsafe(text, title)
     text = deignore(text, ignored)
-
     return (text, fixed_errors)
 
 def has_major(fixes_list):
