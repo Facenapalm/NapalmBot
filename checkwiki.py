@@ -837,13 +837,13 @@ def get_comment(fixes_list, extra_comment_parts=None):
     comment_parts = unique(comment_parts)
 
     if comment_parts == []:
-        comment_prefix = "[[ВП:WPCHECK|CheckWiki]]"
+        comment_prefix = "[[ПРО:CW|CheckWiki]]"
         if has_minor(fixes_list):
             return comment_prefix + ": малые правки."
         else:
             return comment_prefix + "."
     else:
-        comment_prefix = "[[ВП:WPCHECK|CheckWiki]]: исправление "
+        comment_prefix = "[[ПРО:CW|CheckWiki]]: исправление "
         if has_minor(fixes_list):
             return comment_prefix + ", ".join(comment_parts) + "; малые правки."
         else:
