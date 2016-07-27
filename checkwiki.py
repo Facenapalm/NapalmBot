@@ -117,6 +117,10 @@ def unique(lst):
     """Returns the list without element dublication; element's order might be broken."""
     return list(set(lst))
 
+def count_ignore_case(string, substring):
+    """count_ignore_case(s1, s2) works just as s1.count(s2), but ignores case."""
+    return string.lower().count(substring.lower())
+
 # common
 
 def process_link_whitespace(link):
@@ -277,11 +281,23 @@ def error_001_template_with_keyword(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
     return re.subn(r"\{\{" + TEMPLATE + r"\s*", "{{", text, flags=re.I)
 
-def error_002_br_tag(text):
+def error_002_invalid_tags(text):
     """Corrects some cases and returns (new_text, replacements_count) tuple."""
-    (text, correct) = re.subn(r"(<br(?: /)?>)", "\\1", text, flags=re.I)
-    (text, fixed) = re.subn(r"<[/\\]?br[ ]*[/\\]?>", "<br />", text, flags=re.I)
-    return (text, fixed - correct)
+    def _fix_unpair_tag(text, tag):
+        """
+        Fixes self-closing unpair tags and returns (new_text, replacements_count) tuple.
+        tag parameter must contains only name of the tag, for example, "br" for <br>.
+        """
+        correct_tag = "<" + tag + ">"
+        all_tags = r"<[/\\]?" + tag + r"[ ]*[/\\]?>"
+
+        correct = count_ignore_case(text, correct_tag)
+        (text, fixed) = re.subn(all_tags, correct_tag, text, flags=re.I)
+        return (text, fixed - correct)
+
+    (text, fixed_br) = _fix_unpair_tag(text, "br")
+    (text, fixed_hr) = _fix_unpair_tag(text, "hr")
+    return (text, fixed_br + fixed_hr)
 
 def error_009_category_without_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -348,7 +364,7 @@ def error_021_category_in_english(text):
 
 def error_022_category_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    correct = len(re.findall(r"\[\[Категория:", text, flags=re.I))
+    correct = count_ignore_case(text, "[[Категория:")
     (text, fixed) = re.subn(r"\[\[\s*Категория\s*:\s*", "[[Категория:", text, flags=re.I)
     count1 = fixed - correct
 
@@ -461,7 +477,7 @@ def error_052_category_in_article(text):
 
 def error_054_list_with_br(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
-    return allsubn(r"^(\*.*)<br />[ ]*$", "\\1", text, flags=re.M)
+    return allsubn(r"^(\*.*)<br>[ ]*$", "\\1", text, flags=re.M)
 
 def error_057_headline_with_colon(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -469,7 +485,7 @@ def error_057_headline_with_colon(text):
 
 def error_059_template_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    br_finder = re.compile(r"[ ]*<br />[ ]*(?=\n?\s*(?:\||\}\}))")
+    br_finder = re.compile(r"[ ]*<br>[ ]*(?=\n?\s*(?:\||\}\}))")
 
     # pipes can be also used in tables and wikilinks
     # we shouldn't detect these uses (expecially tables)
@@ -528,7 +544,7 @@ def error_064_link_equal_linktext(text):
 
 def error_065_image_desc_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"(\[\[Файл:[^\]]+)\s*<br />\s*(\]\])", "\\1\\2", text)
+    return re.subn(r"(\[\[Файл:[^\]]+)\s*<br>\s*(\]\])", "\\1\\2", text)
 
 def error_067_ref_after_dot(text):
     """
@@ -604,7 +620,7 @@ def error_086_ext_link_two_brackets(text):
 
 def error_088_dsort_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    correct = len(re.findall(r"\{\{DEFAULTSORT:", text, flags=re.I))
+    correct = count_ignore_case(text, "{{DEFAULTSORT")
     (text, fixed) = re.subn(r"\{\{\s*DEFAULTSORT\s*:\s*", "{{DEFAULTSORT:", text, flags=re.I)
     return (text, fixed - correct)
 
@@ -685,7 +701,7 @@ ENABLED_ERRORS = [
     error_016_control_characters,
 
     # html tags
-    error_002_br_tag,
+    error_002_invalid_tags,
     error_026_bold_tag,
     error_038_italic_tag,
     error_042_strike_tag,
