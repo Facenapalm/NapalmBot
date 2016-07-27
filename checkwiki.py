@@ -498,7 +498,7 @@ def error_059_template_with_br(text):
 
 def error_062_url_without_http(text):
     """Fixes the error in refs and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"(<ref.*?>)\s*(\[?)\s*www\.", "\\1\\2http://www.", text)
+    return re.subn(r"(<ref[^<>]*>)\s*(\[?)\s*www\.", "\\1\\2http://www.", text)
 
 def error_063_small_tag_in_refs(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
@@ -579,7 +579,7 @@ def error_070_isbn_wrong_length(text):
 
 def error_080_ext_link_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    unclosen_regexp = r"(<ref>\[https?://[^\[\]]*?)(</ref>)"
+    unclosen_regexp = r"(<ref[^<>]*>\[https?://[^\[\]]*?)(</ref>)"
     broken_regexp = r"(\[https?://[^\[\]]*?)\n([^\[\]]*?\])"
     (text, unclosen) = re.subn(unclosen_regexp, "\\1]\\2", text, flags=re.I)
     (text, broken) = allsubn(broken_regexp, "\\1 \\2", text, flags=re.I)
