@@ -579,7 +579,7 @@ def error_070_isbn_wrong_length(text):
 
 def error_080_ext_link_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    unclosen_regexp = r"(<ref[^<>]*>\[https?://[^\[\]]*?)(</ref>)"
+    unclosen_regexp = r"(<ref[^<>/]*>\[https?://[^\[\]]*?)(</ref>)"
     broken_regexp = r"(\[https?://[^\[\]]*?)\n([^\[\]]*?\])"
     (text, unclosen) = re.subn(unclosen_regexp, "\\1]\\2", text, flags=re.I)
     (text, broken) = allsubn(broken_regexp, "\\1 \\2", text, flags=re.I)
