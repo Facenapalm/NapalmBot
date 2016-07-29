@@ -92,8 +92,14 @@ def main():
     templates = []
     for done, page in enumerate(pages):
         log(done, count)
-        code = mwparserfromhell.parse(page.text)
-        link_prefix = page.title()
+        text = page.text
+        # mwparserfromhell always parses ''''' as <i><b>. So, this case:
+        #   '''''something'' something else'''
+        # It will parse as:
+        #   <i><b>something<i> something else<b>
+        # And it can lead to the error. So, to prevent mwparserfromhell bug:
+        text = re.sub(r"(?:'''''|'''|'')", "", text)
+        code = mwparserfromhell.parse(text)
         for template in code.filter_templates(matches=TEMPLATE_REGEXP):
             if template.has(DONE_PARAM, ignore_empty=True):
                 continue
@@ -101,10 +107,10 @@ def main():
 
             heading = find_heading(code, template)
             if heading is None:
-                link = link_prefix
+                link = page.title()
             else:
                 heading = str(heading.title)
-                link = link_prefix + "#" + linkify_heading(heading)
+                link = page.title() + "#" + linkify_heading(heading)
 
             if template.has(SORT_PARAM, ignore_empty=True):
                 sortkey = template.get(SORT_PARAM).value.strip()
