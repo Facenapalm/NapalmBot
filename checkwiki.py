@@ -69,6 +69,8 @@ CATEGORY = r"(?:категория|к|category)\s*:"
 TEMPLATE = r"(?:шаблон|ш|template|t)\s*:"
 MODULE = r"(?:module|модуль)\s*:"
 
+INTERWIKI = r"(?:[a-z]{2,3}|nds_nl|simple|be-tarask)"
+
 IGNORE_FILTER = re.compile(r"""(
     <!--.*?-->|
 
@@ -203,7 +205,7 @@ def process_external_link(match_obj):
 def process_link_as_external(text, lang_code=LANG_CODE):
     """
     Replaces all links to wikipedia on language, matching lang_code regexp, with a wikilinks.
-    Used in 90 and 91 errors.
+    Used in 90th and 91st errors.
     """
     lang_code = "(" + lang_code + ")"
     prefix = r"\[https?://" + lang_code + r"\.(?:m\.)?wikipedia\.org/(?:w|wiki)/"
@@ -223,6 +225,62 @@ def process_link_as_external(text, lang_code=LANG_CODE):
     count_after = len(re.findall(prefix, text))
 
     return (text, count_before - count_after)
+
+def check_tag_balance(text, tag, recursive=False):
+    """
+    Checks if all tags have a pair. Returns True if yes, otherwise False.
+    tag parameter must contains only name of the tag, for example, "b" for <b>.
+    recursive flag must be True if nested tags are correct. The default value is False.
+    """
+    tags = re.findall(r"<(/?)\s*" + tag + r"\b", text, flags=re.I)
+    tags = [cur_tag == "" for cur_tag in tags] # True for opening, False for closing
+
+    balance = 0
+    for cur_tag in tags:
+        if cur_tag:
+            balance += 1
+        else:
+            balance -= 1
+        if balance < 0:
+            return False
+        if not recursive and balance > 1:
+            return False
+    if balance != 0:
+        return False
+
+    return True
+
+def fix_unpair_tag(text, tag):
+    """
+    Fixes self-closing unpair tags and returns (new_text, replacements_count) tuple.
+    tag parameter must contains only name of the tag, for example, "br" for <br>.
+    Used in 2nd error.
+    """
+    correct_tag = "<" + tag + ">"
+    all_tags = r"<[/\\]?[ ]*" + tag + r"[ ]*[/\\]?>"
+
+    correct = count_ignore_case(text, correct_tag)
+    (text, fixed) = re.subn(all_tags, correct_tag, text, flags=re.I)
+    return (text, fixed - correct)
+
+def fix_pair_tag(text, tag, recursive=False):
+    """
+    Fixes self-closing pair tags and returns (new_text, replacements_count) tuple.
+    tag parameter must contains only name of the tag, for example, "b" for <b>.
+    recursive flag must be True if nested tags are correct. The default value is False.
+    Checks tag balance: if something going wrong, function willn't change anything.
+    Used in 2nd error.
+    """
+    old_text = text
+    correct_tag = "</" + tag + ">"
+
+    (text, fixed1) = re.subn(r"<[ ]*" + tag + r"[ ]*[/\\]>", correct_tag, text, flags=re.I)
+    (text, fixed2) = re.subn(r"<\\[ ]*" + tag + r"[ ]*>", correct_tag, text, flags=re.I)
+
+    if check_tag_balance(text, tag, recursive):
+        return (text, fixed1 + fixed2)
+    else:
+        return (old_text, 0)
 
 LABEL_PREFIX = "\x01"
 LABEL_SUFFIX = "\x02"
@@ -282,22 +340,18 @@ def error_001_template_with_keyword(text):
     return re.subn(r"\{\{" + TEMPLATE + r"\s*", "{{", text, flags=re.I)
 
 def error_002_invalid_tags(text):
-    """Corrects some cases and returns (new_text, replacements_count) tuple."""
-    def _fix_unpair_tag(text, tag):
-        """
-        Fixes self-closing unpair tags and returns (new_text, replacements_count) tuple.
-        tag parameter must contains only name of the tag, for example, "br" for <br>.
-        """
-        correct_tag = "<" + tag + ">"
-        all_tags = r"<[/\\]?" + tag + r"[ ]*[/\\]?>"
+    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    (text, fixed_br) = fix_unpair_tag(text, "br")
+    (text, fixed_hr) = fix_unpair_tag(text, "hr")
+    fixed_total = fixed_br + fixed_hr
 
-        correct = count_ignore_case(text, correct_tag)
-        (text, fixed) = re.subn(all_tags, correct_tag, text, flags=re.I)
-        return (text, fixed - correct)
+    (text, fixed_small) = fix_pair_tag(text, "small")
+    (text, fixed_center) = fix_pair_tag(text, "center")
+    (text, fixed_div) = fix_pair_tag(text, "div", recursive=True)
+    (text, fixed_span) = fix_pair_tag(text, "span", recursive=True)
+    fixed_total += fixed_small + fixed_center + fixed_div + fixed_span
 
-    (text, fixed_br) = _fix_unpair_tag(text, "br")
-    (text, fixed_hr) = _fix_unpair_tag(text, "hr")
-    return (text, fixed_br + fixed_hr)
+    return (text, fixed_total)
 
 def error_009_category_without_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -307,7 +361,7 @@ def error_009_category_without_br(text):
 
 def error_016_control_characters(text):
     """
-    Corrects some cases and returns (new_text, replacements_count) tuple.
+    Fixes some cases and returns (new_text, replacements_count) tuple.
     One of the regexps is copied from wikificator.
     """
     (text, count1) = allsubn(r"(\[\[[^|\[\]]*)[\u00AD\u200E\u200F]+([^\[\]]*\]\])", "\\1\\2", text)
@@ -373,7 +427,10 @@ def error_022_category_with_spaces(text):
 
 def error_026_bold_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"</?(?:b|strong)>", "'''", text, flags=re.I)
+    if check_tag_balance(text, "b") and check_tag_balance(text, "strong"):
+        return re.subn(r"</?(?:b|strong)>", "'''", text, flags=re.I)
+    else:
+        return (text, 0)
 
 def error_032_link_two_pipes(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
@@ -387,7 +444,10 @@ def error_034_template_elements(text):
 
 def error_038_italic_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"</?(?:i|em)>", "''", text, flags=re.I)
+    if check_tag_balance(text, "i") and check_tag_balance(text, "em"):
+        return re.subn(r"</?(?:i|em)>", "''", text, flags=re.I)
+    else:
+        return (text, 0)
 
 def error_042_strike_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -438,7 +498,7 @@ def error_050_mnemonic_dash(text):
     return (text, count1 + count2)
 
 def error_052_category_in_article(text):
-    """Corrects all wrong categories and returns (new_text, fixed_errors_cont) tuple."""
+    """Fixes all wrong categories and returns (new_text, fixed_errors_count) tuple."""
     ignore_filter = re.compile(r"""(
         <noinclude>.*?</noinclude>|
         <onlyinclude>.*?</onlyinclude>|
@@ -555,7 +615,7 @@ def error_067_ref_after_dot(text):
     return allsubn(r"([.,:;])(<ref[^/>]*/>|<ref[^/>]*>.*?</ref>)", "\\2\\1", text, flags=re.DOTALL)
 
 def error_069_isbn_wrong_syntax(text):
-    """Corrects some cases and returns (new_text, replacements_count) tuple."""
+    """Fixes some cases and returns (new_text, replacements_count) tuple."""
     ignore_filter = re.compile(r"""(https?://[^ ]+)""", re.I)
     (text, ignored) = ignore(text, ignore_filter)
 
@@ -586,7 +646,7 @@ def error_080_ext_link_with_br(text):
     return (text, unclosen + broken)
 
 def error_085_empty_tag(text):
-    """Corrects some cases and returns (new_text, replacements_count) tuple."""
+    """Fixes some cases and returns (new_text, replacements_count) tuple."""
     full_count = 0
     cur_count = 1
     while cur_count:
@@ -600,7 +660,7 @@ def error_085_empty_tag(text):
     return (text, full_count)
 
 def error_086_ext_link_two_brackets(text):
-    """Corrects some cases and returns (new_text, replacements_count) tuple."""
+    """Fixes some cases and returns (new_text, replacements_count) tuple."""
     # case: [[http://youtube.com/|YouTube]]
     def _process_link(match_obj):
         """Deals with founded wiki-link."""
@@ -630,11 +690,19 @@ def error_090_internal_link_as_ext(text):
 
 def error_091_interwiki_link_as_ext(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return process_link_as_external(text, r"(?:[a-z]{2,3}|be-tarask)")
+    return process_link_as_external(text, INTERWIKI)
 
 def error_093_double_http(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
     return allsubn(r"https?:/?/?(?=https?://)", "", text, flags=re.I)
+
+def error_098_unclosen_sub(text):
+    """Fixes self-closing tags and returns (new_text, replacements_count) tuple."""
+    return fix_pair_tag(text, "sub")
+
+def error_099_unclosen_sup(text):
+    """Fixes self-closing tags and returns (new_text, replacements_count) tuple."""
+    return fix_pair_tag(text, "sup")
 
 def error_101_sup_in_numbers(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -706,6 +774,8 @@ ENABLED_ERRORS = [
     error_038_italic_tag,
     error_042_strike_tag,
     error_085_empty_tag,
+    error_098_unclosen_sub,
+    error_099_unclosen_sup,
 
     # templates, must be after 002
     error_001_template_with_keyword,
@@ -768,6 +838,8 @@ MAJOR_ERRORS = {
     "90": "ссылок",
     # "91": "ссылок",
     "93": "ссылок",
+    "98": "самозакрывающихся тегов",
+    "99": "самозакрывающихся тегов",
     "104": "сносок"
 }
 
