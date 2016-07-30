@@ -61,15 +61,25 @@ CHECKWIKI_URL = "http://tools.wmflabs.org/checkwiki/cgi-bin/checkwiki.cgi?"
 
 PROJECT = "ruwiki"
 LANG_CODE = "ru"
-TEST_PAGE = "Википедия:Песочница"
 
+INTERWIKI = r"(?:[a-z]{2,3}|nds_nl|simple|be-tarask)"
 IMAGE = r"(?:файл|file|изображение|image)\s*:"
 CATEGORY = r"(?:категория|к|category)\s*:"
-# "c:" also means "category:", but [[c:smth]] is a link to commons
+# "c:" means "category:" too, but [[c:smth]] is a link to commons
 TEMPLATE = r"(?:шаблон|ш|template|t)\s*:"
 MODULE = r"(?:module|модуль)\s*:"
 
-INTERWIKI = r"(?:[a-z]{2,3}|nds_nl|simple|be-tarask)"
+TEST_PAGE = "Википедия:Песочница"
+
+# will be processed with re.I flag after all other fixes
+LOCAL_MINOR_FIXES = [
+    (r"\{\{reflist(?!\+)", "{{примечания"),
+    (r"\{\{список примечаний", "{{примечания"),
+
+    (r"[ ]+(\{\{ref-[a-z]+\}\})", "\\1"),
+
+    (r"\{\{(?:удар|ударение|stress|')\}\}", "{{подст:удар}}")
+]
 
 IGNORE_FILTER = re.compile(r"""(
     <!--.*?-->|
@@ -124,6 +134,57 @@ def count_ignore_case(string, substring):
     return string.lower().count(substring.lower())
 
 # common
+
+LABEL_PREFIX = "\x01"
+LABEL_SUFFIX = "\x02"
+
+def ignore(text, ignore_filter):
+    """
+    Replaces all text matches regexp with special label.
+
+    Parameters:
+        text - text to be processed;
+        ignore_filter - compiled regular expression or string with regexp.
+
+    Returns (new_text, deleted_text_list) tuple.
+    """
+    if isinstance(ignore_filter, str):
+        ignore_filter = re.compile(ignore_filter, flags=re.I | re.DOTALL)
+
+    ignored = []
+    count = 0
+
+    def _ignore_line(match_obj):
+        """Replaces founded text with special label."""
+        #pylint: disable=undefined-variable
+        nonlocal ignored
+        ignored.append(match_obj.group(0))
+
+        nonlocal count
+        old_count = count
+        count += 1
+        return LABEL_PREFIX + str(old_count) + LABEL_SUFFIX
+
+    text = re.sub(LABEL_PREFIX + r"(\d+)" + LABEL_SUFFIX, _ignore_line, text)
+    text = ignore_filter.sub(_ignore_line, text)
+    return (text, ignored)
+
+def deignore(text, ignored):
+    """
+    Restores the text returned by the ignore() function.
+
+    Parameters:
+        text - text to be processed;
+        ignored - deleted_text_list, returned by the ignore() function.
+
+    Returns string.
+    """
+    def _deignore_line(match_obj):
+        """Replaces founded label with corresponding text."""
+        index = int(match_obj.group(1))
+        return ignored[index]
+
+    return re.sub(LABEL_PREFIX + r"(\d+)" + LABEL_SUFFIX, _deignore_line, text)
 
 def process_link_whitespace(link):
     """Replaces "_" symbols with spaces, deletes leading spaces."""
@@ -192,10 +253,7 @@ def process_external_link(match_obj):
     if (is_category or is_image) and code == "":
         code = ":"
 
-    if compare_links(link, name):
-        name = None
-
-    if not name is None:
+    if not compare_links(link, name):
         return "[[" + code + link + "|" + name + "]]"
     elif code == "":
         return "[[" + link + "]]"
@@ -282,57 +340,6 @@ def fix_pair_tag(text, tag, recursive=False):
     else:
         return (old_text, 0)
 
-LABEL_PREFIX = "\x01"
-LABEL_SUFFIX = "\x02"
-
-def ignore(text, ignore_filter):
-    """
-    Replaces all text matches regexp with special label.
-
-    Parameters:
-        text - text to be processed;
-        ignore_filter - compiled regular expression or string with regexp.
-
-    Returns (new_text, deleted_text_list) tuple.
-    """
-    if isinstance(ignore_filter, str):
-        ignore_filter = re.compile(ignore_filter, flags=re.I | re.DOTALL)
-
-    ignored = []
-    count = 0
-
-    def _ignore_line(match_obj):
-        """Replaces founded text with special label."""
-        #pylint: disable=undefined-variable
-        nonlocal ignored
-        ignored.append(match_obj.group(0))
-
-        nonlocal count
-        old_count = count
-        count += 1
-        return LABEL_PREFIX + str(old_count) + LABEL_SUFFIX
-
-    text = re.sub(LABEL_PREFIX + r"(\d+)" + LABEL_SUFFIX, _ignore_line, text)
-    text = ignore_filter.sub(_ignore_line, text)
-    return (text, ignored)
-
-def deignore(text, ignored):
-    """
-    Restores the text returned by the ignore() function.
-
-    Parameters:
-        text - text to be processed;
-        ignored - deleted_text_list, returned by the ignore() function.
-
-    Returns string.
-    """
-    def _deignore_line(match_obj):
-        """Replaces founded label with corresponding text."""
-        index = int(match_obj.group(1))
-        return ignored[index]
-
-    return re.sub(LABEL_PREFIX + r"(\d+)" + LABEL_SUFFIX, _deignore_line, text)
-
 # errors
 
 def error_001_template_with_keyword(text):
@@ -414,7 +421,7 @@ def error_017_category_dublicate(text):
 
 def error_021_category_in_english(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"\[\[category\s*:", "[[Категория:", text, flags=re.I)
+    return re.subn(r"\[\[\s*category\s*:", "[[Категория:", text, flags=re.I)
 
 def error_022_category_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -545,13 +552,11 @@ def error_057_headline_with_colon(text):
 
 def error_059_template_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    br_finder = re.compile(r"[ ]*<br>[ ]*(?=\n?\s*(?:\||\}\}))")
-
+    ignore_filter = re.compile(r"(\[\[.*?\]\]|\{\|.*?\|\})", re.DOTALL)
     # pipes can be also used in tables and wikilinks
     # we shouldn't detect these uses (expecially tables)
-    ignore_filter = re.compile(r"(\[\[.*?\]\]|\{\|.*?\|\})", re.DOTALL)
     (text, ignored) = ignore(text, ignore_filter)
-    (text, count) = br_finder.subn(r"", text)
+    (text, count) = re.subn(r"[ ]*<br>[ ]*(?=\n?\s*(?:\||\}\}))", "", text)
     text = deignore(text, ignored)
 
     return (text, count)
@@ -613,6 +618,16 @@ def error_067_ref_after_dot(text):
     Returns (new_text, replacements_count) tuple.
     """
     return allsubn(r"([.,:;])(<ref[^/>]*/>|<ref[^/>]*>.*?</ref>)", "\\2\\1", text, flags=re.DOTALL)
+
+def error_068_interwiki_link(text):
+    """
+    Fixes direct links, written like interwiki ones.
+    For example, for ruwiki fixes [[:ru:Example|Something]].
+    Returns (new_text, replacements_count) tuple.
+    """
+    # bot will not fix links without a pipe: manual control needed
+    regexp = r"(\[\[):" + LANG_CODE + r":([^\[\|\]\n]+\|[^\[\|\]\n]+\]\])"
+    return re.subn(regexp, "\\1\\2", text, flags=re.I)
 
 def error_069_isbn_wrong_syntax(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
@@ -747,18 +762,14 @@ def minor_fixes_after(text):
     Always returns (new_text, 0) tuple.
     """
     text = re.sub(r"(\[\[:?)" + CATEGORY + r"(\s*)", "\\1Категория:", text, flags=re.I)
-    text = re.sub(r"(\[\[:?)" + MODULE + r"(\s*)", "\\1Модуль:", text, flags=re.I)
+    text = re.sub(r"(\[\[:?)" + MODULE   + r"(\s*)", "\\1Модуль:", text, flags=re.I)
     text = re.sub(r"(\[\[:?)" + TEMPLATE + r"(\s*)", "\\1Шаблон:", text, flags=re.I)
-    text = re.sub(r"(\[\[:?)" + IMAGE + r"(\s*)", "\\1Файл:", text, flags=re.I)
+    text = re.sub(r"(\[\[:?)" + IMAGE    + r"(\s*)", "\\1Файл:", text, flags=re.I)
 
     text = allsub(r"(\[\[[^\[\]\|\n]+)_", "\\1 ", text) # "_" symbols inside links
 
-    text = re.sub(r"\{\{reflist(?!\+)", "{{примечания", text, flags=re.I)
-    text = re.sub(r"\{\{список примечаний", "{{примечания", text, flags=re.I)
-
-    text = re.sub(r" +(\{\{ref-[a-z]+\}\})", "\\1", text)
-
-    text = re.sub(r"\{\{(?:удар|ударение|stress|')\}\}", "{{подст:удар}}", text, flags=re.I)
+    for fix in LOCAL_MINOR_FIXES:
+        text = re.sub(fix[0], fix[1], text, flags=re.I)
 
     return (text, 0)
 
@@ -805,6 +816,7 @@ ENABLED_ERRORS = [
     error_103_pipe_in_wikilink,
     error_032_link_two_pipes,
     error_048_title_link_in_text,
+    error_068_interwiki_link,
     error_064_link_equal_linktext,
 
     # isbn
