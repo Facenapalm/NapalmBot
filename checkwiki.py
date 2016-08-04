@@ -71,14 +71,15 @@ MODULE = r"(?:module|модуль)\s*:"
 
 TEST_PAGE = "Википедия:Песочница"
 
-# will be processed with re.I flag after all other fixes
+# will be processed after all other fixes
+# format: (regexp, replacement)
 LOCAL_MINOR_FIXES = [
-    (r"\{\{reflist(?!\+)", "{{примечания"),
-    (r"\{\{список примечаний", "{{примечания"),
+    (r"\{\{\s*[Rr]eflist(?!\+)", "{{примечания"),
+    (r"\{\{\s*[Сс]писок[_ ]примечаний", "{{примечания"),
 
-    (r"[ ]+(\{\{ref-[a-z]+\}\})", "\\1"),
+    (r"[\u00A0 ]+(\{\{\s*[Rr]ef-[a-z\-]+\s*\}\})", "\\1"),
 
-    (r"\{\{(?:удар|ударение|stress|')\}\}", "{{подст:удар}}")
+    (r"\{\{\s*(?:[Уу]дар|[Уу]дарение|[Ss]tress|')\s*\}\}", "{{подст:удар}}")
 ]
 
 IGNORE_FILTER = re.compile(r"""(
@@ -769,7 +770,7 @@ def minor_fixes_after(text):
     text = allsub(r"(\[\[[^\[\]\|\n]+)_", "\\1 ", text) # "_" symbols inside links
 
     for fix in LOCAL_MINOR_FIXES:
-        text = re.sub(fix[0], fix[1], text, flags=re.I)
+        text = re.sub(fix[0], fix[1], text)
 
     return (text, 0)
 
