@@ -426,8 +426,8 @@ def error_021_category_in_english(text):
 
 def error_022_category_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    correct = count_ignore_case(text, "[[Категория:")
-    (text, fixed) = re.subn(r"\[\[\s*Категория\s*:\s*", "[[Категория:", text, flags=re.I)
+    correct = len(re.findall(r"\[\[Категория:[^ ]", text))
+    (text, fixed) = re.subn(r"\[\[\s*Категория\s*:", "[[Категория:", text, flags=re.I)
     count1 = fixed - correct
 
     (text, count2) = re.subn(r"(\[\[Категория:[^\[\]|]+?)\s+([\]|])", "\\1\\2", text, flags=re.I)
@@ -696,7 +696,7 @@ def error_086_ext_link_two_brackets(text):
 
 def error_088_dsort_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    correct = count_ignore_case(text, "{{DEFAULTSORT")
+    correct = len(re.findall(r"\{\{DEFAULTSORT:[^ ]", text))
     (text, fixed) = re.subn(r"\{\{\s*DEFAULTSORT\s*:\s*", "{{DEFAULTSORT:", text, flags=re.I)
     return (text, fixed - correct)
 
