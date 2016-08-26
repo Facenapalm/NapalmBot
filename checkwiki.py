@@ -626,9 +626,17 @@ def error_068_interwiki_link(text):
     For example, for ruwiki fixes [[:ru:Example|Something]].
     Returns (new_text, replacements_count) tuple.
     """
+    def _check_link(match_obj):
+        """Checks if founded link is a link to a file or a category and inserts extra ":" if so."""
+        link = match_obj.group(2).lstrip().lower()
+        if re.search(r"^" + IMAGE, link) is None and re.search(r"^" + CATEGORY, link) is None:
+            return match_obj.group(1) + match_obj.group(2)
+        else:
+            return match_obj.group(1) + ":" + match_obj.group(2)
+
     # bot will not fix links without a pipe: manual control needed
     regexp = r"(\[\[):" + LANG_CODE + r":([^\[\|\]\n]+\|[^\[\|\]\n]+\]\])"
-    return re.subn(regexp, "\\1\\2", text, flags=re.I)
+    return re.subn(regexp, _check_link, text, flags=re.I)
 
 def error_069_isbn_wrong_syntax(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
@@ -816,8 +824,8 @@ ENABLED_ERRORS = [
     # links, must be after external links and 034
     error_103_pipe_in_wikilink,
     error_032_link_two_pipes,
-    error_048_title_link_in_text,
     error_068_interwiki_link,
+    error_048_title_link_in_text,
     error_064_link_equal_linktext,
 
     # isbn
