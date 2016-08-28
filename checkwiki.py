@@ -448,7 +448,7 @@ def error_032_link_two_pipes(text):
 
 def error_034_template_elements(text):
     """Fixes pagename magicwords and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"{{(NAMESPACE|SITENAME|PAGENAME|FULLPAGENAME)}}", "{{subst:\\1}}", text)
+    return re.subn(r"{{(PAGENAME|FULLPAGENAME)}}", "{{subst:\\1}}", text)
 
 def error_038_italic_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -846,6 +846,7 @@ ENABLED_ERRORS = [
 ]
 
 MAJOR_ERRORS = {
+    "17": "дублирующихся категорий"
     "32": "ссылок",
     "42": "устаревших тегов",
     # "44": "заголовков",
