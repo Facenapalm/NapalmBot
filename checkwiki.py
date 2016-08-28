@@ -74,12 +74,12 @@ TEST_PAGE = "Википедия:Песочница"
 # will be processed after all other fixes
 # format: (regexp, replacement)
 LOCAL_MINOR_FIXES = [
-    (r"\{\{\s*[Rr]eflist(?!\+)", "{{примечания"),
-    (r"\{\{\s*[Сс]писок[_ ]примечаний", "{{примечания"),
+    (r"{{\s*[Rr]eflist(?!\+)", "{{примечания"),
+    (r"{{\s*[Сс]писок[_ ]примечаний", "{{примечания"),
 
-    (r"[\u00A0 ]+(\{\{\s*[Rr]ef-[a-z\-]+\s*\}\})", "\\1"),
+    (r"[\u00A0 ]+({{\s*[Rr]ef-[a-z\-]+\s*}})", "\\1"),
 
-    (r"\{\{\s*(?:[Уу]дар|[Уу]дарение|[Ss]tress|')\s*\}\}", "{{подст:удар}}")
+    (r"{{\s*(?:[Уу]дар|[Уу]дарение|[Ss]tress|')\s*}}", "{{подст:удар}}")
 ]
 
 IGNORE_FILTER = re.compile(r"""(
@@ -345,7 +345,7 @@ def fix_pair_tag(text, tag, recursive=False):
 
 def error_001_template_with_keyword(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"\{\{" + TEMPLATE + r"\s*", "{{", text, flags=re.I)
+    return re.subn(r"{{" + TEMPLATE + r"\s*", "{{", text, flags=re.I)
 
 def error_002_invalid_tags(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -553,11 +553,11 @@ def error_057_headline_with_colon(text):
 
 def error_059_template_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    ignore_filter = re.compile(r"(\[\[.*?\]\]|\{\|.*?\|\})", re.DOTALL)
+    ignore_filter = re.compile(r"(\[\[.*?\]\]|{\|.*?\|})", re.DOTALL)
     # pipes can be also used in tables and wikilinks
     # we shouldn't detect these uses (expecially tables)
     (text, ignored) = ignore(text, ignore_filter)
-    (text, count) = re.subn(r"[ ]*<br>[ ]*(?=\n?\s*(?:\||\}\}))", "", text)
+    (text, count) = re.subn(r"[ ]*<br>[ ]*(?=\n?\s*(?:\||}}))", "", text)
     text = deignore(text, ignored)
 
     return (text, count)
@@ -704,8 +704,8 @@ def error_086_ext_link_two_brackets(text):
 
 def error_088_dsort_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    correct = len(re.findall(r"\{\{DEFAULTSORT:[^ ]", text))
-    (text, fixed) = re.subn(r"\{\{\s*DEFAULTSORT\s*:\s*", "{{DEFAULTSORT:", text, flags=re.I)
+    correct = len(re.findall(r"{{DEFAULTSORT:[^ ]", text))
+    (text, fixed) = re.subn(r"{{\s*DEFAULTSORT\s*:\s*", "{{DEFAULTSORT:", text, flags=re.I)
     return (text, fixed - correct)
 
 def error_090_internal_link_as_ext(text):
