@@ -442,8 +442,10 @@ def error_026_bold_tag(text):
 
 def error_032_link_two_pipes(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    (text, ignored) = ignore(text, r"(\[\[\s*:?\s*)" + IMAGE + r".*?\]\]")
     (text, count1) = re.subn(r"\[\[([^\|\[\]\n]+)\|\|([^\|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
     (text, count2) = re.subn(r"\[\[([^\|\[\]\n]+)\|([^\|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
+    text = deignore(text, ignored)
     return (text, count1 + count2)
 
 def error_034_template_elements(text):
