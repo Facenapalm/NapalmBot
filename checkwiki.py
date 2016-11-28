@@ -291,7 +291,7 @@ def check_tag_balance(text, tag, recursive=False):
     tag parameter must contains only name of the tag, for example, "b" for <b>.
     recursive flag must be True if nested tags are correct. The default value is False.
     """
-    tags = re.findall(r"<(/?)\s*" + tag + r"\b", text, flags=re.I)
+    tags = re.findall(r"<(/?)\s*" + tag + r"\b[^<>]*?>", text, flags=re.I)
     tags = [cur_tag == "" for cur_tag in tags] # True for opening, False for closing
 
     balance = 0
@@ -848,7 +848,7 @@ ENABLED_ERRORS = [
 ]
 
 MAJOR_ERRORS = {
-    "17": "дублирующихся категорий"
+    "17": "дублирующихся категорий",
     "32": "ссылок",
     "42": "устаревших тегов",
     # "44": "заголовков",
