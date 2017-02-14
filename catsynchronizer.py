@@ -10,6 +10,17 @@ import checkwiki
 CREATE_COMMENT = "Автоматическая заливка категорий."
 ADD_CATEGORY_COMMENT = "Простановка [[{}]]."
 
+LOGFILE = open("log.txt", "w", encoding="utf-8")
+
+def output(line, log=True):
+    """
+    Write line (first parameter) to console and logfile if second parameter
+    is True.
+    """
+    if log:
+        pywikibot.output(line)
+        LOGFILE.write(line + "\n")
+
 def get_sitelink_safe(page, site):
     """
     For current page (first parameter) return a name of the corresponding page in
@@ -46,14 +57,12 @@ def synchronize_category(source, category, log=True):
         title = page.title()
         new_title = get_sitelink_safe(page, site)
         if new_title is None:
-            if log:
-                pywikibot.output("- [[{}]]: no destination page".format(title))
+            output("- [[{}]]: no destination page".format(title), log=log)
             continue
         page = pywikibot.Page(site, new_title)
 
         if category in page.categories():
-            if log:
-                pywikibot.output("- [[{}]]: already in category".format(title))
+            output("- [[{}]]: already in category".format(title), log=log)
             continue
 
         text = page.text
@@ -62,8 +71,7 @@ def synchronize_category(source, category, log=True):
         page.text = text
         page.save(ADD_CATEGORY_COMMENT.format(catname))
         checkwiki.mark_error_list_done(fixed_errors, title)
-        if log:
-            pywikibot.output("+ [[{}]]: [[{}]] added".format(title, page.title()))
+        output("+ [[{}]]: [[{}]] added".format(title, page.title()), log=log)
 
 def create_categories(category, site, regexp, replace, text, update=True, limit=5, log=True):
     """
@@ -90,28 +98,26 @@ def create_categories(category, site, regexp, replace, text, update=True, limit=
         if new_title is None:
             (new_title, match) = re.subn(regexp, replace, title)
             if match == 0:
-                if log:
-                    pywikibot.output("[[{}]]: title doesn't matches regexp, skipped".format(title))
+                output("[[{}]]: title doesn't matches regexp, skipped".format(title), log=log)
                 continue
             size = calculate_category(source, site)
             if size < limit:
-                if log:
-                    pywikibot.output("[[{}]]: too small category ({} memebers), skipped".format(title, size))
+                output("[[{}]]: too small category ({} memebers), skipped".format(title, size), log=log)
                 continue
             (new_text, match) = re.subn(regexp, text, title)
             dest = pywikibot.Category(site, new_title)
+            if dest.exists():
+                output("[[{}]]: failed to create, category [[{}]] already exists".format(title, new_title), log=log)
+                continue
             dest.text = new_text
             dest.save(CREATE_COMMENT)
-            if log:
-                pywikibot.output("[[{}]]: created as [[{}]], synchronization".format(title, new_title))
+            output("[[{}]]: created as [[{}]], synchronization".format(title, new_title), log=log)
         else:
             if update:
                 dest = pywikibot.Category(site, new_title)
-                if log:
-                    pywikibot.output("[[{}]]: corresponding category found, synchronization".format(title))
+                output("[[{}]]: corresponding category found, synchronization".format(title), log=log)
             else:
-                if log:
-                    pywikibot.output("[[{}]]: corresponding category found, skipped".format(title))
+                output("[[{}]]: corresponding category found, skipped".format(title), log=log)
                 continue
 
         synchronize_category(source, dest, log=log)
