@@ -62,7 +62,21 @@ CHECKWIKI_URL = "http://tools.wmflabs.org/checkwiki/cgi-bin/checkwiki.cgi?"
 PROJECT = "ruwiki"
 LANG_CODE = "ru"
 
-INTERWIKI = r"(?:[a-z]{2,3}|nds_nl|simple|be-tarask)"
+WIKIPEDIAS = [
+    # list contains only wikipedias with 10k+ articles, but that's should be enough
+    "en", "ceb", "sv", "de", "nl", "fr", "ru", "it", "es", "war", "pl", "vi", "ja", "pt", "zh",
+    "uk", "ca", "fa", "ar", "no", "sh", "fi", "hu", "id", "ro", "cs", "ko", "sr", "tr", "ms", "eu",
+    "eo", "bg", "da", "min", "kk", "sk", "hy", "zh-min-nan", "he", "lt", "hr", "ce", "sl", "et",
+    "gl", "nn", "uz", "el", "be", "la", "simple", "vo", "hi", "th", "az", "ur", "ka", "ta", "cy",
+    "mk", "mg", "oc", "lv", "bs", "new", "tt", "tg", "te", "tl", "sq", "pms", "ky", "br",
+    "be-tarask", "zh-yue", "ht", "jv", "ast", "bn", "lb", "ml", "mr", "af", "pnb", "sco", "is",
+    "ga", "cv", "ba", "fy", "sw", "my", "lmo", "an", "yo", "ne", "io", "gu", "nds", "scn", "bpy",
+    "pa", "ku", "als", "bar", "kn", "qu", "ia", "su", "ckb", "mn", "arz", "bat-smg", "azb", "nap",
+    "wa", "gd", "bug", "yi", "am", "map-bms", "si", "fo", "mzn", "or", "li", "sah", "hsb", "vec",
+    "sa", "os", "ilo", "mai", "mrj"
+]
+INTERWIKI = r"(?:{})".format(r"|".join(WIKIPEDIAS))
+
 IMAGE = r"(?:файл|file|изображение|image)\s*:"
 CATEGORY = r"(?:категория|к|category)\s*:"
 # "c:" means "category:" too, but [[c:smth]] is a link to commons
@@ -500,12 +514,24 @@ def error_048_title_link_in_text(text):
 error_048_title_link_in_text.title = None
 
 def error_050_mnemonic_dash(text):
-    """
-    Fixes the error and returns (new_text, replacements_count) tuple.
-    """
+    """Fixes the error and returns (new_text, replacements_count) tuple."""
     (text, count1) = re.subn("&ndash;", "–", text, flags=re.I)
     (text, count2) = re.subn("&mdash;", "—", text, flags=re.I)
     return (text, count1 + count2)
+
+def error_051_interwiki_in_text(text):
+    """
+    Fixes obvious cases and returns (new_text, fixed_errors_count) tuple.
+
+    error_051_interwiki_in_text.last_count parameter contains last returned
+    replacements_count value.
+    """
+    regexp = r"(\[\[)({}):[ ]*([^\[\]|\n]+\|[^\[\]|\n]+\]\])".format(INTERWIKI)
+    (text, count) = re.subn(regexp, "\\1:\\2:\\3", text, flags=re.I)
+    error_051_interwiki_in_text.last_count = count
+    return (text, count)
+
+error_051_interwiki_in_text.last_count = 0
 
 def error_052_category_in_article(text):
     """Fixes all wrong categories and returns (new_text, fixed_errors_count) tuple."""
@@ -544,6 +570,13 @@ def error_052_category_in_article(text):
     text = text.rstrip() + "\n"
 
     return (text, count)
+
+def error_053_interwiki_in_text(text):
+    """
+    This is just a placeholder which repeats the result of
+    error_051_interwiki_in_text function to make 53rd error also markable.
+    """
+    return (text, error_051_interwiki_in_text.last_count)
 
 def error_054_list_with_br(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
@@ -826,6 +859,8 @@ ENABLED_ERRORS = [
     # links, must be after external links and 034
     error_103_pipe_in_wikilink,
     error_032_link_two_pipes,
+    error_051_interwiki_in_text,
+    error_053_interwiki_in_text,
     error_068_interwiki_link,
     error_048_title_link_in_text,
     error_064_link_equal_linktext,
@@ -854,6 +889,8 @@ MAJOR_ERRORS = {
     # "44": "заголовков",
     # "48": "ссылок",
     # "57": "заголовков",
+    "51": "интервик",
+    "53": "интервик",
     "62": "ссылок",
     "69": "ISBN",
     "70": "ISBN",
