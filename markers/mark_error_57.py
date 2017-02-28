@@ -5,7 +5,7 @@ from checkwiki import load_page_list, mark_error_done, log
 
 NUMBER = "57"
 REGEXP = r":[ ]*=+[ ]*$"
-FLAGS = re.I
+FLAGS = re.M
 
 def main():
     """Downloads list from server and marks relevant errors as done."""
