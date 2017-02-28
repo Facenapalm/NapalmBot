@@ -773,9 +773,24 @@ def error_103_pipe_in_wikilink(text):
 
 def error_104_quote_marks_in_refs(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    (text, count1) = re.subn(r"(<ref name=\"[^\">]+?)(\s*/?>)", "\\1\"\\2", text)
-    (text, count2) = re.subn(r"(<ref name=)([^\">]+?\"\s*/?>)", "\\1\"\\2", text)
-    return (text, count1 + count2)
+    count3 = 0
+    def quote_ref(match):
+        """Quotes ref name if it's neccessary."""
+        #pylint: disable=undefined-variable
+        nonlocal count3
+        name = match.group(2)
+        if "\"" in name or re.match(r"^'.*'$", name):
+            # ref is already quotetd (all is ok) or has quote (dangerous to fix)
+            return match.group(0)
+        if re.search(r"['/\\=?#\s]", name):
+            count3 += 1
+            return match.group(1) + "\"" + name + "\"" + match.group(3)
+        return match.group(0)
+
+    (text, count1) = re.subn(r"(<ref\s+name\s*=\s*\"[^\">]+?)(\s*/?>)", "\\1\"\\2", text)
+    (text, count2) = re.subn(r"(<ref\s+name\s*=\s*)([^\">]+?\"\s*/?>)", "\\1\"\\2", text)
+    text = re.sub(r"(<ref\s+name\s*=\s*)(.*?)(\s*/?>)", quote_ref, text)
+    return (text, count1 + count2 + count3)
 
 def minor_fixes_before(text):
     """
@@ -907,7 +922,7 @@ MAJOR_ERRORS = {
 def get_error_num(function):
     """
     Extracts first number from function name and returns string with it.
-    Lead zeroes will be truncated.
+    Leading zeroes will be truncated.
     """
     match_obj = re.search(r"\d+", function.__name__)
     if match_obj is None:
