@@ -330,7 +330,7 @@ def fix_unpair_tag(text, tag):
     Used in 2nd error.
     """
     correct_tag = "<" + tag + ">"
-    all_tags = r"<[/\\]?[ ]*" + tag + r"[ ]*[/\\]?>"
+    all_tags = r"<[/\\ ]*" + tag + r"[/\\ ]*>"
 
     correct = count_ignore_case(text, correct_tag)
     (text, fixed) = re.subn(all_tags, correct_tag, text, flags=re.I)
