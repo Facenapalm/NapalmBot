@@ -675,7 +675,8 @@ def error_068_interwiki_link(text):
 
 def error_069_isbn_wrong_syntax(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
-    ignore_filter = re.compile(r"""(https?://[^ ]+)""", re.I)
+    # ISBNs can be found in links and ref names
+    ignore_filter = re.compile(r"""(https?://[^ ]+|<ref.*?>)""", re.I)
     (text, ignored) = ignore(text, ignore_filter)
 
     # colon after ISBN
@@ -698,11 +699,12 @@ def error_070_isbn_wrong_length(text):
 
 def error_080_ext_link_with_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    unclosen_regexp = r"(<ref[^<>/]*>\[https?://[^\[\]]*?)(</ref>)"
-    broken_regexp = r"(\[https?://[^\[\]]*?)\n([^\[\]]*?\])"
-    (text, unclosen) = re.subn(unclosen_regexp, "\\1]\\2", text, flags=re.I)
-    (text, broken) = allsubn(broken_regexp, "\\1 \\2", text, flags=re.I)
-    return (text, unclosen + broken)
+    (text, inref) = re.subn(r"(<ref[^<>/]*>\[https?://[^\[\]]*?)(</ref>)", "\\1]\\2",
+                            text, flags=re.I)
+    (text, broken) = allsubn(r"(\[https?://[^\[\]]*?)\n([^\[\]]*?\])", "\\1 \\2",
+                             text, flags=re.I)
+    (text, inlist) = re.subn(r"^(\*[ ]*\[https?://[^\[\]\n]*)$", "\\1]", text, flags=re.I | re.M)
+    return (text, inref + inlist + broken)
 
 def error_085_empty_tag(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
