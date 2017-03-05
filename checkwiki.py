@@ -93,7 +93,7 @@ LOCAL_MINOR_FIXES = [
 
     (r"[\u00A0 ]+({{\s*[Rr]ef-[a-z\-]+\s*}})", "\\1"),
 
-    (r"{{\s*(?:[Уу]дар|[Уу]дарение|[Ss]tress|')\s*}}", "{{подст:удар}}")
+    (r"{{\s*(?:[Уу]дар|[Уу]дарение|[Ss]tress|')\s*}}", "\u0301")
 ]
 
 IGNORE_FILTER = re.compile(r"""(
@@ -105,10 +105,10 @@ IGNORE_FILTER = re.compile(r"""(
     <math>.*?</math>|
     <hiero>.*?</hiero>|
 
-    <source>.*?</source>|
     <tt>.*?</tt>|
     <code>.*?</code>|
     <pre>.*?</pre>|
+    <source[^>]*>.*?</source>|
     <syntaxhighlight[^>]*>.*?</syntaxhighlight>|
 
     <templatedata>.*?</templatedata>|
@@ -377,7 +377,7 @@ def error_002_invalid_tags(text):
 
 def error_009_category_without_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    (text, no_after) = re.subn(r"(\[\[категория:.*?\]\][ ]*)([^ \n])", "\\1\n\\2", text, flags=re.I)
+    (text, no_after) = re.subn(r"(\[\[категория:.*?\]\][ ]*)(\S)", "\\1\n\\2", text, flags=re.I)
     (text, no_before) = re.subn(r"([^\n])(\[\[категория:.*?\]\])", "\\1\n\\2", text, flags=re.I)
     return (text, no_after + no_before)
 
@@ -454,9 +454,17 @@ def error_026_bold_tag(text):
     else:
         return (text, 0)
 
+def error_027_mnemonic_codes(text):
+    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    (text, ignored) = ignore(text, r"https?://\S+")
+    (text, count1) = re.subn(r"&#8211;", "–", text);
+    (text, count2) = re.subn(r"&#x20;", " ", text);
+    text = deignore(text, ignored)
+    return (text, count1 + count2)
+
 def error_032_link_two_pipes(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
-    (text, ignored) = ignore(text, r"(\[\[\s*:?\s*)" + IMAGE + r".*?\]\]")
+    (text, ignored) = ignore(text, r"\[\[\s*:?\s*" + IMAGE + r".*?\]\]")
     (text, count1) = re.subn(r"\[\[([^\|\[\]\n]+)\|\|([^\|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
     (text, count2) = re.subn(r"\[\[([^\|\[\]\n]+)\|([^\|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
     text = deignore(text, ignored)
@@ -657,8 +665,8 @@ def error_067_ref_after_dot(text):
 
 def error_068_interwiki_link(text):
     """
-    Fixes direct links, written like interwiki ones.
-    For example, for ruwiki fixes [[:ru:Example|Something]].
+    Fixes links to Special:BookSearch and direct links, written like interwiki
+    ones. For example, for ruwiki fixes [[:ru:Example|Something]].
     Returns (new_text, replacements_count) tuple.
     """
     def _check_link(match_obj):
@@ -670,13 +678,16 @@ def error_068_interwiki_link(text):
             return match_obj.group(1) + ":" + match_obj.group(2)
 
     # bot will not fix links without a pipe: manual control needed
-    regexp = r"(\[\[):" + LANG_CODE + r":([^\[\|\]\n]+\|[^\[\|\]\n]+\]\])"
-    return re.subn(regexp, _check_link, text, flags=re.I)
+    (text, direct) = re.subn(r"(\[\[):{}:([^\[\|\]\n]+\|[^\[\|\]\n]+\]\])".format(LANG_CODE),
+                             _check_link, text, flags=re.I)
+    (text, books) = re.subn(r"\[\[:..:Special:BookSources/\d+X?\|(ISBN [0-9\-X]+)\]\]",
+                            "\\1", text, flags=re.I)
+    return (text, direct + books)
 
 def error_069_isbn_wrong_syntax(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
     # ISBNs can be found in links and ref names
-    ignore_filter = re.compile(r"""(https?://[^ ]+|<ref.*?>)""", re.I)
+    ignore_filter = re.compile(r"""(https?://\S+|<ref.*?>)""", re.I)
     (text, ignored) = ignore(text, ignore_filter)
 
     # colon after ISBN
@@ -741,7 +752,7 @@ def error_086_ext_link_two_brackets(text):
 
 def error_088_dsort_with_spaces(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    correct = len(re.findall(r"{{DEFAULTSORT:[^ ]", text))
+    correct = len(re.findall(r"{{DEFAULTSORT:\S", text))
     (text, fixed) = re.subn(r"{{\s*DEFAULTSORT\s*:\s*", "{{DEFAULTSORT:", text, flags=re.I)
     return (text, fixed - correct)
 
@@ -843,6 +854,7 @@ ENABLED_ERRORS = [
     # html tags
     error_002_invalid_tags,
     error_026_bold_tag,
+    error_027_mnemonic_codes,
     error_038_italic_tag,
     error_042_strike_tag,
     error_085_empty_tag,
