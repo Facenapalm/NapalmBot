@@ -203,7 +203,7 @@ def deignore(text, ignored):
 
 def process_link_whitespace(link):
     """Replaces "_" symbols with spaces, deletes leading spaces."""
-    return re.sub(r"_", " ", link).strip()
+    return re.sub(r"[_ ]+", " ", link).strip()
 
 def unificate_link(link):
     """Processes whitespaces, makes first letter upper."""
@@ -839,7 +839,8 @@ def minor_fixes_after(text):
     text = re.sub(r"(\[\[:?)" + IMAGE    + r"(\s*)", "\\1Файл:", text, flags=re.I)
 
     # "_" symbols inside links
-    text = re.sub(r"\[\[[^|\[\]\n]*_[^|\[\]\n]*\|", lambda m: m.group(0).replace("_", " ", text))
+    replacer = lambda m: m.group(0).replace("_", " ", text)
+    text = re.sub(r"\[\[[^|\[\]\n]*_[^|\[\]\n]*\|", replacer, text)
 
     for fix in LOCAL_MINOR_FIXES:
         text = re.sub(fix[0], fix[1], text)
