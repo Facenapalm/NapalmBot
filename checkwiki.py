@@ -286,13 +286,13 @@ def process_link_as_external(text, lang_code=LANG_CODE):
 
     count_before = len(re.findall(prefix, text))
 
-    exp1 = prefix + r"([^\[\]\|?=]+)\|([^\[\]\|]+)" + suffix # [wp/Example Article|text]
+    exp1 = prefix + r"([^\[\]|?=]+)\|([^\[\]|]+)" + suffix # [wp/Example Article|text]
     text = re.sub(exp1, process_external_link, text, flags=re.I)
-    exp2 = prefix + r"([^\[\]\| ?=]+) ([^\[\]\|]+)" + suffix # [wp/Example_Article text]
+    exp2 = prefix + r"([^\[\]| ?=]+) ([^\[\]|]+)" + suffix # [wp/Example_Article text]
     text = re.sub(exp2, process_external_link, text, flags=re.I)
 
     if FIX_UNSAFE_EXTLINKS:
-        exp3 = prefix + r"([^\[\]\|?=]+)" + suffix # [wp/Example_Article]
+        exp3 = prefix + r"([^\[\]|?=]+)" + suffix # [wp/Example_Article]
         text = re.sub(exp3, process_external_link, text, flags=re.I)
 
     count_after = len(re.findall(prefix, text))
@@ -396,7 +396,7 @@ def error_017_category_dublicate(text):
     Fixes the error and returns (new_text, replacements_count) tuple.
     Always chooses the category with the longest sort key.
     """
-    regexp = r"\[\[категория:([^\|\[\]\n]+)(?:\|([^\|\[\]\n]*))?\]\]\n?"
+    regexp = r"\[\[категория:([^|\[\]\n]+)(?:\|([^|\[\]\n]*))?\]\]\n?"
     category_finder = re.compile(regexp, flags=re.I)
     category_list = category_finder.findall(text)
 
@@ -465,8 +465,8 @@ def error_027_mnemonic_codes(text):
 def error_032_link_two_pipes(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
     (text, ignored) = ignore(text, r"\[\[\s*:?\s*" + IMAGE + r".*?\]\]")
-    (text, count1) = re.subn(r"\[\[([^\|\[\]\n]+)\|\|([^\|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
-    (text, count2) = re.subn(r"\[\[([^\|\[\]\n]+)\|([^\|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
+    (text, count1) = re.subn(r"\[\[([^|\[\]\n]+)\|\|([^|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
+    (text, count2) = re.subn(r"\[\[([^|\[\]\n]+)\|([^|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
     text = deignore(text, ignored)
     return (text, count1 + count2)
 
@@ -516,7 +516,7 @@ def error_048_title_link_in_text(text):
         else:
             return match_obj.group(0)
 
-    text = re.sub(r"\[\[([^\]\|\n]+)(?:\|([^\]\|\n]+))?\]\]", _process_link, text)
+    text = re.sub(r"\[\[([^\]|\n]+)(?:\|([^\]|\n]+))?\]\]", _process_link, text)
     return (text, count)
 
 error_048_title_link_in_text.title = None
@@ -648,7 +648,7 @@ def error_064_link_equal_linktext(text):
         else:
             return "[[" + link + "|" + quotes + name + quotes + "]]"
 
-    text = re.sub(r"\[\[([^\]\|\n]+)(?:\|([^\]\|\n]+))?\]\]", _process_link, text)
+    text = re.sub(r"\[\[([^\]|\n]+)(?:\|([^\]|\n]+))?\]\]", _process_link, text)
     return (text, count)
 
 def error_065_image_desc_with_br(text):
@@ -678,7 +678,7 @@ def error_068_interwiki_link(text):
             return match_obj.group(1) + ":" + match_obj.group(2)
 
     # bot will not fix links without a pipe: manual control needed
-    (text, direct) = re.subn(r"(\[\[):{}:([^\[\|\]\n]+\|[^\[\|\]\n]+\]\])".format(LANG_CODE),
+    (text, direct) = re.subn(r"(\[\[):{}:([^|\[\]\n]+\|[^|\[\]\n]+\]\])".format(LANG_CODE),
                              _check_link, text, flags=re.I)
     (text, books) = re.subn(r"\[\[:..:Special:BookSources/\d+X?\|(ISBN [0-9\-X]+)\]\]",
                             "\\1", text, flags=re.I)
@@ -743,7 +743,7 @@ def error_086_ext_link_two_brackets(text):
         else:
             link = re.sub(" ", "%20", link)
         return "[" + link + " " + name + "]"
-    exp1 = r"\[\[(https?://[^\[\]\|\n]+)\|([^\[\]\|\n]+)\]\]"
+    exp1 = r"\[\[(https?://[^|\[\]\n]+)\|([^|\[\]\n]+)\]\]"
     (text, count1) = re.subn(exp1, _process_link, text, flags=re.I)
     # case: [[http://youtube.com YouTube]]
     exp2 = r"\[(\[https?://[^\[\]\n]+\])\]"
@@ -782,7 +782,7 @@ def error_101_sup_in_numbers(text):
 
 def error_103_pipe_in_wikilink(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"(\[\[[^\]\|\n]+){{!}}([^\]\|\n]+\]\])", "\\1|\\2", text)
+    return re.subn(r"(\[\[[^\]|\n]+){{!}}([^\]|\n]+\]\])", "\\1|\\2", text)
 
 def error_104_quote_marks_in_refs(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -823,7 +823,7 @@ def minor_fixes_before(text):
     extlink_regexp = re.compile(r"\[https?://[^\n\]]+\]", flags=re.I)
     (text, ignored) = ignore(text, extlink_regexp)
     link_decoder = lambda x: decode_link(x.group(0))[0]
-    text = re.sub(r"\[\[[^\[\]\|]+\|", link_decoder, text) # encoded links
+    text = re.sub(r"\[\[[^|\[\]\n]+\|", link_decoder, text) # encoded links
     text = deignore(text, ignored)
 
     return (text, 0)
@@ -838,7 +838,8 @@ def minor_fixes_after(text):
     text = re.sub(r"(\[\[:?)" + TEMPLATE + r"(\s*)", "\\1Шаблон:", text, flags=re.I)
     text = re.sub(r"(\[\[:?)" + IMAGE    + r"(\s*)", "\\1Файл:", text, flags=re.I)
 
-    text = allsub(r"(\[\[[^\[\]\|\n]+)_", "\\1 ", text) # "_" symbols inside links
+    # "_" symbols inside links
+    text = re.sub(r"\[\[[^|\[\]\n]*_[^|\[\]\n]*\|", lambda m: m.group(0).replace("_", " ", text))
 
     for fix in LOCAL_MINOR_FIXES:
         text = re.sub(fix[0], fix[1], text)
