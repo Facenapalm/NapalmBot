@@ -387,7 +387,7 @@ def error_016_control_characters(text):
     One of the regexps is copied from wikificator.
     """
     (text, count1) = allsubn(r"(\[\[[^|\[\]]*)[\u00AD\u200E\u200F]+([^\[\]]*\]\])", "\\1\\2", text)
-    (text, count2) = re.subn(r"[\u200E\uFEFF\u200B\u2028\u202A\u202C\u202D\u202E]", "", text)
+    (text, count2) = re.subn(r"[\uFEFF\u200B\u2028\u202A\u202C\u202D\u202E]", "", text)
     (text, count3) = re.subn(r"[\u2004\u2005\u2006\u2007\u2008]", " ", text)
     return (text, count1 + count2 + count3)
 
