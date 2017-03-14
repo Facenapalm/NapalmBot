@@ -5,9 +5,9 @@ marks all fixed errors as done.
 Written in python 3.5, compatibility with older versions doesn't tested.
 Adapted for ruwiki. Do not use this bot on other wikis!
 
-Usage (Windows only):
-	markall
+Usage:
+	python markall.py
 
-Make sure that checkwiki.py and user-config.py modules are in the same
-directory with markers.
+Make sure that checkwiki.py and user-config.py modules are available from
+markers directory.
 """
