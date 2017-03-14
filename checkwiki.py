@@ -14,6 +14,7 @@ There are 6 available keys:
     --p: next parameters are titles of the Wikipedia pages [default]
     --f: next parameters are names of the files, which contains page titles
     --s: next parameters are numbers of the errors which is neccessary to fix
+         (make sure they're major or --min flag is used)
     --t: also process test page (see TEST_PAGE constant)
 For example:
     python checkwiki.py Example1 Example2 --f pages.txt
@@ -281,7 +282,7 @@ def process_link_as_external(text, lang_code=LANG_CODE):
     Used in 90th and 91st errors.
     """
     lang_code = "(" + lang_code + ")"
-    prefix = r"\[https?://" + lang_code + r"\.(?:m\.)?wikipedia\.org/(?:w|wiki)/"
+    prefix = r"\[https?://{}\.(?:m\.)?wikipedia\.org/(?:w|wiki)/".format(lang_code)
     suffix = r"\]"
 
     count_before = len(re.findall(prefix, text))
@@ -305,7 +306,7 @@ def check_tag_balance(text, tag, recursive=False):
     tag parameter must contains only name of the tag, for example, "b" for <b>.
     recursive flag must be True if nested tags are correct. The default value is False.
     """
-    tags = re.findall(r"<(/?)\s*" + tag + r"\b[^<>]*?>", text, flags=re.I)
+    tags = re.findall(r"<(/?)\s*{}\b[^<>]*?>".format(tag), text, flags=re.I)
     tags = [cur_tag == "" for cur_tag in tags] # True for opening, False for closing
 
     balance = 0
@@ -323,16 +324,22 @@ def check_tag_balance(text, tag, recursive=False):
 
     return True
 
-def fix_unpair_tag(text, tag):
+def fix_unpair_tag(text, tag, count_selfclosing=True):
     """
     Fixes self-closing unpair tags and returns (new_text, replacements_count) tuple.
     tag parameter must contains only name of the tag, for example, "br" for <br>.
+    If self-closing tags are correct, set count_selfclosing param to False.
+    self-closing still will be corrected in the name of unification, but those
+    replacements will not be counted.
     Used in 2nd error.
     """
-    correct_tag = "<" + tag + ">"
-    all_tags = r"<[/\\ ]*" + tag + r"[/\\ ]*>"
+    correct_tag = "<{}>".format(tag)
+    all_tags = r"<[/\\ ]*{}[/\\ ]*>".format(tag)
 
-    correct = count_ignore_case(text, correct_tag)
+    if count_selfclosing:
+        correct = count_ignore_case(text, correct_tag)
+    else:
+        correct = len(re.findall(r"<{}\s*/?>".format(tag), text))
     (text, fixed) = re.subn(all_tags, correct_tag, text, flags=re.I)
     return (text, fixed - correct)
 
@@ -345,10 +352,10 @@ def fix_pair_tag(text, tag, recursive=False):
     Used in 2nd error.
     """
     old_text = text
-    correct_tag = "</" + tag + ">"
+    correct_tag = "</{}>".format(tag)
 
-    (text, fixed1) = re.subn(r"<[ ]*" + tag + r"[ ]*[/\\]>", correct_tag, text, flags=re.I)
-    (text, fixed2) = re.subn(r"<\\[ ]*" + tag + r"[ ]*>", correct_tag, text, flags=re.I)
+    (text, fixed1) = re.subn(r"<[ ]*{}[ ]*[/\\]>".format(tag), correct_tag, text, flags=re.I)
+    (text, fixed2) = re.subn(r"<\\[ ]*{}[ ]*>".format(tag), correct_tag, text, flags=re.I)
 
     if check_tag_balance(text, tag, recursive):
         return (text, fixed1 + fixed2)
@@ -363,8 +370,8 @@ def error_001_template_with_keyword(text):
 
 def error_002_invalid_tags(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    (text, fixed_br) = fix_unpair_tag(text, "br")
-    (text, fixed_hr) = fix_unpair_tag(text, "hr")
+    (text, fixed_br) = fix_unpair_tag(text, "br", count_selfclosing=False)
+    (text, fixed_hr) = fix_unpair_tag(text, "hr", count_selfclosing=False)
     fixed_total = fixed_br + fixed_hr
 
     (text, fixed_small) = fix_pair_tag(text, "small")
@@ -457,14 +464,14 @@ def error_026_bold_tag(text):
 def error_027_mnemonic_codes(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
     (text, ignored) = ignore(text, r"https?://\S+")
-    (text, count1) = re.subn(r"&#8211;", "–", text);
-    (text, count2) = re.subn(r"&#x20;", " ", text);
+    (text, count1) = re.subn(r"&#8211;", "–", text)
+    (text, count2) = re.subn(r"&#x20;", " ", text)
     text = deignore(text, ignored)
     return (text, count1 + count2)
 
 def error_032_link_two_pipes(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
-    (text, ignored) = ignore(text, r"\[\[\s*:?\s*" + IMAGE + r".*?\]\]")
+    (text, ignored) = ignore(text, r"\[\[\s*:?\s*{}.*?\]\]".format(IMAGE))
     (text, count1) = re.subn(r"\[\[([^|\[\]\n]+)\|\|([^|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
     (text, count2) = re.subn(r"\[\[([^|\[\]\n]+)\|([^|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
     text = deignore(text, ignored)
@@ -914,26 +921,49 @@ ENABLED_ERRORS = [
 ]
 
 MAJOR_ERRORS = {
-    "17": "дублирующихся категорий",
+    "1": "шаблонов",
+    "2": "синтаксиса тегов",
+    "9": "категорий",
+    "17": "категорий",
+    "21": "категорий",
+    "26": "HTML-тегов",
+    "27": "HTML-мнемоник",
     "32": "ссылок",
+    "34": "шаблонов",
+    "38": "HTML-тегов",
     "42": "устаревших тегов",
-    # "44": "заголовков",
-    # "48": "ссылок",
-    # "57": "заголовков",
-    "51": "интервик",
-    "53": "интервик",
-    "62": "ссылок",
+    "44": "заголовков",
+    "48": "ссылок",
+    "50": "HTML-мнемоник",
+    "51": "ссылок",
+    "52": "категорий",
+    "53": "ссылок",
+    "54": "лишних br",
+    "57": "заголовков",
+    "59": "лишних br",
+    "62": "вынешних ссылок",
+    "63": "оформления",
+    "65": "лишних br",
+    "68": "ссылок",
     "69": "ISBN",
     "70": "ISBN",
-    "80": "ссылок",
-    "86": "ссылок",
-    "90": "ссылок",
-    # "91": "ссылок",
-    "93": "ссылок",
-    "98": "самозакрывающихся тегов",
-    "99": "самозакрывающихся тегов",
+    "80": "вынешних ссылок",
+    "85": "пустых тегов",
+    "86": "вынешних ссылок",
+    "88": "DEFAULTSORT",
+    "90": "вынешних ссылок",
+    "91": "вынешних ссылок",
+    "93": "вынешних ссылок",
+    "98": "незакрытых тегов",
+    "99": "незакрытых тегов",
+    "101": "оформления",
+    "103": "ссылок",
     "104": "сносок"
 }
+
+COMMENT_PREFIX = "[[ПРО:CW|CheckWiki]]"
+COMMENT_FIX = "исправление"
+COMMENT_MINOR = "малые правки"
 
 def get_error_num(function):
     """
@@ -1020,18 +1050,17 @@ def get_comment(fixes_list, extra_comment_parts=None):
             comment_parts.append(MAJOR_ERRORS[fix])
     comment_parts = unique(comment_parts)
 
-    if comment_parts == []:
-        comment_prefix = "[[ПРО:CW|CheckWiki]]"
-        if has_minor(fixes_list):
-            return comment_prefix + ": малые правки."
-        else:
-            return comment_prefix + "."
-    else:
-        comment_prefix = "[[ПРО:CW|CheckWiki]]: исправление "
-        if has_minor(fixes_list):
-            return comment_prefix + ", ".join(comment_parts) + "; малые правки."
-        else:
-            return comment_prefix + ", ".join(comment_parts) + "."
+    comment_halfs = []
+    if len(comment_parts) > 0:
+        comment_halfs.append(COMMENT_FIX + " " + ", ".join(comment_parts))
+    if has_minor(fixes_list):
+        comment_halfs.append(COMMENT_MINOR)
+
+    comment = "; ".join(comment_halfs)
+    if len(comment) > 0:
+        comment = ": " + comment
+
+    return COMMENT_PREFIX + comment + "."
 
 def process_page(page, force_minor=False):
     """
@@ -1116,6 +1145,34 @@ def process_list(site, titles, force_minor=False, log_needed=True):
             log(title, errlist, success)
     return count
 
+def process_server(site, num, force_minor=False, log_needed=True):
+    """
+    Downloads list from server and fixes pages with current error.
+    Function also marks corresponding errors in CheckWiki web interface.
+
+    Parameters:
+        site is an instance of pywikibot.Site.
+        num is a string which contains number of an error.
+        force_minor is boolean.
+        log_needed is boolean.
+    If force_minor is True, the changes will be sent to the server even if there's no major fixes.
+    If log_needed is True, function will be shown fixed errors list for every page.
+
+    Returns fixed pages count.
+    """
+    global MAJOR_ERRORS
+    backup = MAJOR_ERRORS
+    result = 0
+    if num in MAJOR_ERRORS:
+        MAJOR_ERRORS = {num: MAJOR_ERRORS[num]}
+        result = process_list(site, load_page_list(num), force_minor, log_needed)
+    else:
+        MAJOR_ERRORS = {}
+        if force_minor:
+            result = process_list(site, load_page_list(num), force_minor, log_needed)
+    MAJOR_ERRORS = backup
+    return result
+
 def main():
     """Parses console parameters and fixes corresponding pages."""
     if len(sys.argv) == 1:
@@ -1145,7 +1202,7 @@ def main():
             with open(arg, encoding="utf-8") as listfile:
                 process_list(site, list(listfile), force_minor)
         elif source == "server":
-            process_list(site, load_page_list(arg), force_minor)
+            process_server(site, arg, force_minor)
         elif source == "title":
             process_list(site, [arg], force_minor)
 
