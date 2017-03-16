@@ -456,10 +456,12 @@ def error_022_category_with_spaces(text):
 
 def error_026_bold_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    if check_tag_balance(text, "b") and check_tag_balance(text, "strong"):
-        return re.subn(r"</?(?:b|strong)>", "'''", text, flags=re.I)
+    backup = text
+    (text, count) = re.subn(r"<(b|strong)>([^\n<>]+)</\1>", "'''\\2'''", text, flags=re.I)
+    if re.search(r"</?(?:b|strong)>", text, flags=re.I):
+        return (backup, 0)
     else:
-        return (text, 0)
+        return (text, count)
 
 def error_027_mnemonic_codes(text):
     """Fixes some cases and returns (new_text, replacements_count) tuple."""
@@ -483,10 +485,12 @@ def error_034_template_elements(text):
 
 def error_038_italic_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    if check_tag_balance(text, "i") and check_tag_balance(text, "em"):
-        return re.subn(r"</?(?:i|em)>", "''", text, flags=re.I)
+    backup = text
+    (text, count) = re.subn(r"<(i|em)>([^\n<>]+)</\1>", "''\\2''", text, flags=re.I)
+    if re.search(r"</?(?:i|em)>", text, flags=re.I):
+        return (backup, 0)
     else:
-        return (text, 0)
+        return (text, count)
 
 def error_042_strike_tag(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
