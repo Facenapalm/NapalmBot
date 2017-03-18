@@ -803,8 +803,10 @@ def error_104_quote_marks_in_refs(text):
         #pylint: disable=undefined-variable
         nonlocal count3
         name = match.group(2)
+        if re.search(r"group\s*=", name):
+            return match.group(0)
         if "\"" in name or re.match(r"^'.*'$", name):
-            # ref is already quotetd (all is ok) or has quote (dangerous to fix)
+            # ref is already quotetd (all is ok) or has a quote (dangerous to fix)
             return match.group(0)
         if re.search(r"['/\\=?#\s]", name):
             count3 += 1
