@@ -28,7 +28,7 @@
 # m h  dom mon dow   command
 
 # 0 * * * * jsub -N test -quiet -o /dev/null -e /dev/null python3 $HOME/test.py
-# 0 * * * * jsub -N markall -quiet -o /dev/null -e /dev/null python3 $HOME/markers/techtasks.py $HOME/markers
+# 0 * * * * jsub -N markall -quiet -o /dev/null -e /dev/null python3 $HOME/markers/markall.py $HOME/markers
 0 * * * * jsub -N techtasks -quiet -o /dev/null -e /dev/null python3 $HOME/techtasks.py
 0 0 * * 6 jsub -N kul -quiet -o /dev/null -e /dev/null python3 $HOME/kul.py
 0 * * * * jsub -N sandboxes -quiet -o /dev/null -e /dev/null python3 $HOME/sandbox.py
