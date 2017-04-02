@@ -402,8 +402,10 @@ def error_003_no_references(text):
             # that's not a solution
             return (text, 0)
         if re.match(r"\s*($|\n==|\[\[Категория:)", text[pos:]) is None:
-            # section isn't empty
-            return (text, 0)
+            if not (FIX_UNSAFE_MISSING_REFERENCES and
+                re.match(r"(\n{{[^{}]+}}|\[\[Категория:[^\[\]]+\]\]|\s)*$", text[pos:])):
+                # section isn't empty
+                return (text, 0)
         text = text[:pos] + "\n{{примечания}}" + text[pos:]
         return (text, 1)
 
