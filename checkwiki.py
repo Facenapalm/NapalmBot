@@ -119,6 +119,7 @@ IGNORE_FILTER = re.compile(r"""(
 # also see ENABLED_ERRORS and MAJOR_ERRORS lists in #main section
 
 FIX_UNSAFE_EXTLINKS = False
+FIX_UNSAFE_MISSING_REFERENCES = False
 
 # stdlib addiction
 
@@ -381,6 +382,55 @@ def error_002_invalid_tags(text):
     fixed_total += fixed_small + fixed_center + fixed_div + fixed_span
 
     return (text, fixed_total)
+
+def error_003_no_references(text):
+    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    last_ref = text.rfind("<ref")
+    if last_ref == -1:
+        # no references in page
+        return (text, 0)
+    if (re.search(r"{{\s*(?:примечания|список[_ ]примечаний|reflist\+?)", text, flags=re.I) or
+        re.search(r"<\s*references", text, flags=re.I)):
+        # references already here
+        return (text, 0)
+
+    # try to place references into corresponding section
+    section = re.search(r"^==[ ]*Примечани[ея][ ]*==$", text, flags=re.M)
+    if section:
+        pos = section.end(0)
+        if pos < last_ref:
+            # that's not a solution
+            return (text, 0)
+        if re.match(r"\s*($|\n==|\[\[Категория:)", text[pos:]) is None:
+            # section isn't empty
+            return (text, 0)
+        text = text[:pos] + "\n{{примечания}}" + text[pos:]
+        return (text, 1)
+
+    # try to place references before special sections
+    section = re.search(r"^==[ ]*(Литература|Ссылки|Источники)[ ]*==$", text, flags=re.M | re.I)
+    if section:
+        start = section.start(0)
+        end = section.end(0)
+        if start < last_ref:
+            return (text, 0)
+        if re.match(r"\s*($|\[\[Категория:)", text[end:]):
+            # section is empty
+            text = text[:start] + "== Примечания ==\n{{примечания}}" + text[end:]
+        else:
+            text = text[:start] + "== Примечания ==\n{{примечания}}\n\n" + text[start:]
+        return (text, 1)
+
+    # place references into end of article, just before categories and templates (navigational etc)
+    if FIX_UNSAFE_MISSING_REFERENCES:
+        section = re.search(r"(\n{{[^{}]+}}|\[\[Категория:[^\[\]]+\]\]|\s)*$", text)
+        pos = section.start(0)
+        if pos < last_ref:
+            return (text, 0)
+        text = text[:pos] + "\n\n== Примечания ==\n{{примечания}}" + text[pos:]
+        return (text, 1)
+
+    return (text, 0)
 
 def error_009_category_without_br(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -870,6 +920,7 @@ ENABLED_ERRORS = [
     error_002_invalid_tags,
     error_026_bold_tag,
     error_027_mnemonic_codes,
+    error_050_mnemonic_dash,
     error_038_italic_tag,
     error_042_strike_tag,
     error_085_empty_tag,
@@ -917,7 +968,7 @@ ENABLED_ERRORS = [
     error_054_list_with_br,
     error_065_image_desc_with_br,
 
-    error_050_mnemonic_dash,
+    error_003_no_references,
     error_063_small_tag_in_refs,
     error_088_dsort_with_spaces,
     error_101_sup_in_numbers,
@@ -929,6 +980,7 @@ ENABLED_ERRORS = [
 MAJOR_ERRORS = {
     "1": "шаблонов",
     "2": "синтаксиса тегов",
+    "3": "отсутствующей секции примечаний",
     "9": "категорий",
     "17": "категорий",
     "21": "категорий",

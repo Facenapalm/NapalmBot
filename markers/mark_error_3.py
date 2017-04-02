@@ -10,7 +10,8 @@ def main():
     site = pywikibot.Site()
     for line in load_page_list(NUMBER):
         page = pywikibot.Page(site, line)
-        if "{{примечания" in page.text:
+        if (re.search(r"{{(?:[Пп]римечания|[Сс]писок[_ ]примечаний|[Rr]eflist\+?)", page.text) or
+            re.search(r"<\s*references.*?>", page.text, flags=re.I)):
             mark_error_done(NUMBER, page.title())
             log(line, success=True)
         else:
