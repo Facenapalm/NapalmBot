@@ -845,7 +845,7 @@ def error_101_sup_in_numbers(text):
 
 def error_103_pipe_in_wikilink(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
-    return re.subn(r"(\[\[[^\]|\n]+){{!}}([^\]|\n]+\]\])", "\\1|\\2", text)
+    return re.subn(r"(\[\[[^\{\]|\n]+){{!}}([^\{\]|\n]+\]\])", "\\1|\\2", text)
 
 def error_104_quote_marks_in_refs(text):
     """Fixes the error and returns (new_text, replacements_count) tuple."""
@@ -1062,7 +1062,11 @@ def load_page_list(error_num, offset=0):
     data = re.search(r"<pre>(.*)</pre>", data, flags=re.DOTALL)
     if data is None:
         return []
-    return data.group(1).strip().split("\n")
+    data = data.group(1).strip()
+    if data == "":
+        return []
+    else:
+        return data.split("\n")
 
 def process_text(text, title=None):
     """
