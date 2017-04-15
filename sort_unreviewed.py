@@ -121,7 +121,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
     metaline = "* [[{metapage}/{{page}}|{{page}}]] ({{num}} страниц)".format(metapage=metapage)
     emptylist = "Всё отпатрулировано. Отличная работа!"
-    listcat = "\n\n[[Категория:Википедия:Списки неотпатрулированных файлов|{page}]]"
+    listcat = "\n<noinclude>[[Категория:Википедия:Списки неотпатрулированных файлов|{page}]]</noinclude>"
     comment = "Обновление списка."
 
     def _select_from_cat(pagename, category):
@@ -168,7 +168,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
         return metaline.format(page=pagename, num=len(files))
 
-    def _select_most_used(pagename, level):
+    def _select_from_use_count(pagename, min_usage=0, max_usage=float("inf")):
         """
         Select all high used unreviewed files.
         Return the number of found files.
@@ -176,7 +176,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
         files = []
         for value in info:
             length = len(value["pages"])
-            if length > level:
+            if length >= min_usage and length <= max_usage:
                 files.append((value["filename"], length))
         files = sorted(files, key=lambda x: (-x[1], x[0]))
 
@@ -234,7 +234,8 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
     lines.append("Прочее:")
     lines.append(_select_from_ext("не изображения", ["jpg", "jpeg", "png", "gif", "svg", "tif", "tiff"], reverse=True))
-    lines.append(_select_most_used("самые используемые", 5))
+    lines.append(_select_from_use_count("самые используемые", min_usage=5))
+    lines.append(_select_from_use_count("неиспользуемые", max_usage=0))
 
     lines.append("")
     lines.append("[[Категория:Википедия:Списки неотпатрулированных файлов| ]]")
