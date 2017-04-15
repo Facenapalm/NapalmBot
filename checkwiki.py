@@ -904,7 +904,7 @@ def minor_fixes_after(text):
     text = re.sub(r"(\[\[:?)" + IMAGE    + r"(\s*)", "\\1Файл:", text, flags=re.I)
 
     # "_" symbols inside links
-    replacer = lambda m: m.group(0).replace("_", " ", text)
+    replacer = lambda m: m.group(0).replace("_", " ")
     text = re.sub(r"\[\[[^|\[\]\n]*_[^|\[\]\n]*\|", replacer, text)
 
     for fix in LOCAL_MINOR_FIXES:
