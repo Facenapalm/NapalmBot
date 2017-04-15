@@ -120,6 +120,8 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
     """Sort files and create subpages of metapage with corresponding information."""
 
     metaline = "* [[{metapage}/{{page}}|{{page}}]] ({{num}} страниц)".format(metapage=metapage)
+    emptylist = "Всё отпатрулировано. Отличная работа!"
+    listcat = "\n\n[[Категория:Википедия:Списки неотпатрулированных файлов|{page}]]"
     comment = "Обновление списка."
 
     def _select_from_cat(pagename, category):
@@ -135,9 +137,11 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
         page = pywikibot.Page(site, metapage + "/" + pagename)
         if files == []:
-            page.text = "Всё отпатрулировано. Отличная работа!"
+            text = emptylist
         else:
-            page.text = "\n".join(["# [[:{}]]".format(name) for name in files])
+            text = "\n".join(["# [[:{}]]".format(name) for name in files])
+            text += listcat.format(page=pagename)
+        page.text = text
         page.save(comment)
 
         return metaline.format(page=pagename, num=len(files))
@@ -155,9 +159,11 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
         page = pywikibot.Page(site, metapage + "/" + pagename)
         if files == []:
-            page.text = "Всё отпатрулировано. Отличная работа!"
+            text = emptylist
         else:
-            page.text = "\n".join(["# [[:{}]]".format(name) for name in files])
+            text = "\n".join(["# [[:{}]]".format(name) for name in files])
+            text += listcat.format(page=pagename)
+        page.text = text
         page.save(comment)
 
         return metaline.format(page=pagename, num=len(files))
@@ -172,13 +178,15 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
             length = len(value["pages"])
             if length > level:
                 files.append((value["filename"], length))
-        files = sorted(files, key=lambda x: -x[1])
+        files = sorted(files, key=lambda x: (-x[1], x[0]))
 
         page = pywikibot.Page(site, metapage + "/" + pagename)
         if files == []:
-            page.text = "Всё отпатрулировано. Отличная работа!"
+            text = emptylist
         else:
-            page.text = "\n".join(["# [[:{}]] ({})".format(name, usage) for (name, usage) in files])
+            text = "\n".join(["# [[:{}]] ({})".format(name, usage) for (name, usage) in files])
+            text += listcat.format(page=pagename)
+        page.text = text
         page.save(comment)
 
         return metaline.format(page=pagename, num=len(files))
@@ -229,7 +237,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
     lines.append(_select_most_used("самые используемые", 5))
 
     lines.append("")
-    lines.append("[[Категория:Википедия:Патрулирование]]")
+    lines.append("[[Категория:Википедия:Списки неотпатрулированных файлов| ]]")
 
     page = pywikibot.Page(site, metapage)
     page.text = "\n".join(lines)
