@@ -142,7 +142,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
             text = "\n".join(["# [[:{}]]".format(name) for name in files])
             text += listcat.format(page=pagename)
         page.text = text
-        page.save(comment)
+        page.save(comment, minor=False)
 
         return metaline.format(page=pagename, num=len(files))
 
@@ -164,7 +164,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
             text = "\n".join(["# [[:{}]]".format(name) for name in files])
             text += listcat.format(page=pagename)
         page.text = text
-        page.save(comment)
+        page.save(comment, minor=False)
 
         return metaline.format(page=pagename, num=len(files))
 
@@ -187,7 +187,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
             text = "\n".join(["# [[:{}]] ({})".format(name, usage) for (name, usage) in files])
             text += listcat.format(page=pagename)
         page.text = text
-        page.save(comment)
+        page.save(comment, minor=False)
 
         return metaline.format(page=pagename, num=len(files))
 
@@ -242,7 +242,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
     page = pywikibot.Page(site, metapage)
     page.text = "\n".join(lines)
-    page.save(comment)
+    page.save(comment, minor=False)
 
 
 def main():
