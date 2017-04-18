@@ -46,11 +46,15 @@ def delete_old_request(match):
     template = match.group("section")
     status_match = re.search(r"\|\s*статус\s*=\s*([+-])", template)
     date_match = re.search(r"\|\s*администратор\s*=[^/]+/\s*(\d{14})", template)
-    if status_match is None or date_match is None:
+    if date_match is None:
         # request is still open
         return match.group(0)
+    if status_match is None:
+        status = "+"
+    else:
+        status = status_match.group(1)
 
-    delay = (1 if status_match.group(1) == "+" else 3) * 24 * 60 * 60
+    delay = (1 if status == "+" else 3) * 24 * 60 * 60
     date = datetime.strptime(date_match.group(1), "%Y%m%d%H%M%S")
     if (UTCNOW - date).total_seconds() < delay:
         return match.group(0)
