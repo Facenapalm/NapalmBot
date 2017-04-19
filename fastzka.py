@@ -75,17 +75,17 @@ def main():
     page = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые")
     text = page.text
 
-    (text, is_corrected) = replace(correct_request, text)
-    (text, is_deleted) = replace(delete_old_request, text)
+    (text, corrected_count) = replace(correct_request, text)
+    (text, deleted_count) = replace(delete_old_request, text)
 
     page.text = text
 
-    if is_corrected and is_deleted:
-        page.save("Исправление ошибок, удаление старых запросов.")
-    elif is_corrected:
-        page.save("Исправление ошибок.")
-    elif is_deleted:
-        page.save("Удаление старых запросов.")
+    if corrected_count > 0 and deleted_count > 0:
+        page.save("Исправление ошибочных ({}), удаление старых запросов ({}).".format(corrected_count, deleted_count))
+    elif corrected_count > 0:
+        page.save("Исправление ошибочных запросов ({}).".format(corrected_count))
+    elif deleted_count > 0:
+        page.save("Удаление старых запросов ({}).".format(deleted_count))
 
 if __name__ == "__main__":
     main()
