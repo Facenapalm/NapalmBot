@@ -20,6 +20,10 @@ REGEXP = re.compile(r"""
 """, re.I | re.VERBOSE)
 UTCNOW = datetime.utcnow()
 
+CORRECTED_COUNT = 0
+DELETED_DONE_COUNT = 0
+DELETED_UNDONE_COUNT = 0
+
 def correct_request(match):
     """
     Fix some errors, for example, update header if it doesn't match the content.
@@ -38,7 +42,9 @@ def correct_request(match):
     if header == correct_header:
         # all is ok
         return match.group(0)
-    
+
+    global CORRECTED_COUNT
+    CORRECTED_COUNT += 1
     return "{}== {} ==\n{}".format(indent, correct_header, template)
 
 def delete_old_request(match):
@@ -50,24 +56,47 @@ def delete_old_request(match):
         # request is still open
         return match.group(0)
     if status_match is None:
-        status = "+"
+        done = True
     else:
-        status = status_match.group(1)
+        done = status_match.group(1) == "+"
 
-    delay = (1 if status == "+" else 3) * 24 * 60 * 60
+    delay = (1 if done else 3) * 24 * 60 * 60
     date = datetime.strptime(date_match.group(1), "%Y%m%d%H%M%S")
     if (UTCNOW - date).total_seconds() < delay:
         return match.group(0)
     else:
+        if done:
+            global DELETED_DONE_COUNT
+            DELETED_DONE_COUNT += 1
+        else:
+            global DELETED_UNDONE_COUNT
+            DELETED_UNDONE_COUNT += 1
         return ""
 
-def replace(replacement, text):
-    """
-    Do REGEXP.sub(replacement, text) and return (new_text, status) tuple, where
-    status is a boolean which is True if there was at least one replacement.
-    """
-    new_text = REGEXP.sub(replacement, text)
-    return (new_text, new_text != text)
+def form_comment():
+    """Analyze global variables and form a comment for an edit."""
+    if DELETED_DONE_COUNT > 0 and DELETED_UNDONE_COUNT > 0:
+        deleted = "{} выполненных, {} невыполненных".format(DELETED_DONE_COUNT, DELETED_UNDONE_COUNT)
+    elif DELETED_DONE_COUNT > 0:
+        deleted = "{} выполненных".format(DELETED_DONE_COUNT)
+    elif DELETED_UNDONE_COUNT > 0:
+        deleted = "{} невыполненных".format(DELETED_UNDONE_COUNT)
+    else:
+        deleted = ""
+
+    if CORRECTED_COUNT:
+        corrected = str(CORRECTED_COUNT)
+    else:
+        corrected = ""
+
+    if corrected and deleted:
+        return "Исправление ошибочных ({}), удаление старых запросов ({}).".format(corrected, deleted)
+    elif corrected:
+        return "Исправление ошибочных запросов ({}).".format(corrected)
+    elif deleted:
+        return "Удаление старых запросов ({}).".format(deleted)
+    else:
+        return ""
 
 def main():
     """Update list."""
@@ -75,17 +104,13 @@ def main():
     page = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые")
     text = page.text
 
-    (text, corrected_count) = replace(correct_request, text)
-    (text, deleted_count) = replace(delete_old_request, text)
+    text = REGEXP.sub(correct_request, text)
+    text = REGEXP.sub(delete_old_request, text)
 
-    page.text = text
-
-    if corrected_count > 0 and deleted_count > 0:
-        page.save("Исправление ошибочных ({}), удаление старых запросов ({}).".format(corrected_count, deleted_count))
-    elif corrected_count > 0:
-        page.save("Исправление ошибочных запросов ({}).".format(corrected_count))
-    elif deleted_count > 0:
-        page.save("Удаление старых запросов ({}).".format(deleted_count))
+    comment = form_comment()
+    if comment:
+        page.text = text
+        page.save(comment)
 
 if __name__ == "__main__":
     main()
