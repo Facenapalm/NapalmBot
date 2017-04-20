@@ -76,13 +76,13 @@ def delete_old_request(match):
 def form_comment():
     """Analyze global variables and form a comment for an edit."""
     plural = lambda num, word: word + ("ый" if num % 10 == 1 and num % 100 != 11 else "ых")
-    plural_phrase = lambda num, word: str(num) + " " + plural(word, num)
+    plural_phrase = lambda num, word: str(num) + " " + plural(num, word)
 
     deleted_parts = []
     if DELETED_DONE_COUNT > 0:
-        deleted_parts.append(plural_phrase("выполненн", DELETED_DONE_COUNT))
+        deleted_parts.append(plural_phrase(DELETED_DONE_COUNT, "выполненн"))
     if DELETED_UNDONE_COUNT > 0:
-        deleted_parts.append(plural_phrase("невыполненн", DELETED_UNDONE_COUNT))
+        deleted_parts.append(plural_phrase(DELETED_UNDONE_COUNT, "невыполненн"))
     deleted = ", ".join(deleted_parts)
 
     if CORRECTED_COUNT:
