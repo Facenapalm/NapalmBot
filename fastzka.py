@@ -105,6 +105,8 @@ def main():
     page = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые")
     text = page.text
 
+    text = re.sub(r"^==.*?==\n+(==.*?==)$", "\\1", text, flags=re.M)
+
     text = REGEXP.sub(correct_request, text)
     text = REGEXP.sub(delete_old_request, text)
 
