@@ -11,7 +11,7 @@ import pywikibot
 
 REGEXP = re.compile(r"""
     (?P<indent>\n*)
-    ==\s*(?P<header>.*?)\s*==\s+
+    ==[ ]*(?P<header>.*?)[ ]*==\s+
     (?P<section>
         <onlyinclude>\s*
         (?:[^<]|<(?!/?onlyinclude))*?\s*
