@@ -144,12 +144,10 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
         There are 3 modes: "all", "any" and "none".
         Return the line for metapage.
         """
+        catset = set(catlist)
         files = []
         for value in info:
-            count = 0
-            for category in catlist:
-                if category in value["categories"]:
-                    count += 1
+            count = len(catset & value["categories"])
             if (mode == "any" and count > 0 or
                 mode == "none" and count == 0 or
                 mode == "all" and count == len(catlist)):
@@ -166,15 +164,6 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
         page.save(comment, minor=False)
 
         return metaline.format(page=pagename, num=len(files))
-
-    # def _select_from_metacat(pagename, metacat):
-    #     """
-    #     Select all unreviewed files used on pages from this category, its subcategories, etc.
-    #     Return the line for metapage.
-    #     """
-    #     category = pywikibot.Category(site, metacat)
-    #     catlist = [subcat.title() for subcat in category.subcategories(recurse=True)]
-    #     return _select_from_cats(pagename, catlist)
 
     def _select_from_ext(pagename, extensions, reverse=False):
         """
