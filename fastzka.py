@@ -18,20 +18,39 @@ REGEXP = re.compile(r"""
         </onlyinclude>
     )
 """, re.I | re.VERBOSE)
+
+TIME_FORMAT = "%Y%m%d%H%M%S"
 UTCNOW = datetime.utcnow()
+UTCNOWSTR = UTCNOW.strftime(TIME_FORMAT)
 
 CORRECTED_COUNT = 0
 DELETED_DONE_COUNT = 0
 DELETED_UNDONE_COUNT = 0
 
+def minor_fixes(text):
+    """Fix some minor errors before processing the page."""
+    text = re.sub(r"^==.*?==\n+(==.*?==)$", "\\1", text, flags=re.M) # empty sections
+    return text
+
 def correct_request(match):
     """
     Fix some errors, for example, update header if it doesn't match the content.
     """
+    # initialization
+    corrected = False
     indent = match.group("indent")
     header = match.group("header")
     template = match.group("section")
 
+    # missing timestamp fix
+    (template, flag) = re.subn(
+        r"(\|\s*администратор\s*=[^/\n]*[^/\s][^/\n]*)\n",
+        "\\1/" + UTCNOWSTR + "\n",
+        template)
+    if flag > 0:
+        corrected = True
+
+    # wrong header fix
     question = re.search(r"\|\s*вопрос\s*=(.*)", template)
     timestamp = re.search(r"\|\s*автор\s*=[^/]+/\s*(\d{14})", template)
     if question is None or timestamp is None:
@@ -39,13 +58,17 @@ def correct_request(match):
         return match.group(0)
 
     correct_header = question.group(1).strip() + "/" + timestamp.group(1)
-    if header == correct_header:
-        # all is ok
-        return match.group(0)
+    if header != correct_header:
+        corrected = True
+        header = correct_header
 
-    global CORRECTED_COUNT
-    CORRECTED_COUNT += 1
-    return "{}== {} ==\n{}".format(indent, correct_header, template)
+    # finalization
+    if corrected:
+        global CORRECTED_COUNT
+        CORRECTED_COUNT += 1
+        return "{}== {} ==\n{}".format(indent, header, template)
+    else:
+        return match.group(0)
 
 def delete_old_request(match):
     """Process one table row and delete it if it's neccessary."""
@@ -61,7 +84,7 @@ def delete_old_request(match):
         done = status_match.group(1) == "+"
 
     delay = (1 if done else 3) * 24 * 60 * 60
-    date = datetime.strptime(date_match.group(1), "%Y%m%d%H%M%S")
+    date = datetime.strptime(date_match.group(1), TIME_FORMAT)
     if (UTCNOW - date).total_seconds() < delay:
         return match.group(0)
     else:
@@ -105,8 +128,7 @@ def main():
     page = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые")
     text = page.text
 
-    text = re.sub(r"^==.*?==\n+(==.*?==)$", "\\1", text, flags=re.M)
-
+    text = minor_fixes(text)
     text = REGEXP.sub(correct_request, text)
     text = REGEXP.sub(delete_old_request, text)
 
