@@ -1,11 +1,14 @@
 """
 Maintainer script for ruwiki's admin request table ([[:ru:ВП:ЗКАБ]]).
 
+Log file is used for saving "администратор" field in deleted requests.
+
 Usage:
-    python fastzka.py
+    python fastzka.py [log.txt]
 """
 
 import re
+import sys
 from datetime import datetime
 import pywikibot
 
@@ -27,15 +30,18 @@ CORRECTED_COUNT = 0
 DELETED_DONE_COUNT = 0
 DELETED_UNDONE_COUNT = 0
 
+if len(sys.argv) > 1:
+    LOGFILE = open(sys.argv[1], "a", encoding="utf-8")
+else:
+    LOGFILE = None
+
 def minor_fixes(text):
     """Fix some minor errors before processing the page."""
     text = re.sub(r"^==.*?==\n+(==.*?==)$", "\\1", text, flags=re.M) # empty sections
     return text
 
 def correct_request(match):
-    """
-    Fix some errors, for example, update header if it doesn't match the content.
-    """
+    """Fix some errors, for example, update header if it doesn't match the content."""
     # initialization
     corrected = False
     indent = match.group("indent")
@@ -74,17 +80,18 @@ def delete_old_request(match):
     """Process one table row and delete it if it's neccessary."""
     template = match.group("section")
     status_match = re.search(r"\|\s*статус\s*=\s*([+-])", template)
-    date_match = re.search(r"\|\s*администратор\s*=[^/]+/\s*(\d{14})", template)
-    if date_match is None:
+    admin_match = re.search(r"\|\s*администратор\s*=([^/]+)/\s*(\d{14})", template)
+    if admin_match is None:
         # request is still open
         return match.group(0)
     if status_match is None:
         done = True
     else:
         done = status_match.group(1) == "+"
+    admin = admin_match.group(1)
 
     delay = (1 if done else 3) * 24 * 60 * 60
-    date = datetime.strptime(date_match.group(1), TIME_FORMAT)
+    date = datetime.strptime(admin_match.group(2), TIME_FORMAT)
     if (UTCNOW - date).total_seconds() < delay:
         return match.group(0)
     else:
@@ -94,6 +101,8 @@ def delete_old_request(match):
         else:
             global DELETED_UNDONE_COUNT
             DELETED_UNDONE_COUNT += 1
+        if LOGFILE:
+            LOGFILE.write("{}/{}\n".format(admin, date))
         return ""
 
 def form_comment():
