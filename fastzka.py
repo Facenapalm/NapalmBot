@@ -80,7 +80,7 @@ def delete_old_request(match):
     """Process one table row and delete it if it's neccessary."""
     template = match.group("section")
     status_match = re.search(r"\|\s*статус\s*=\s*([+-])", template)
-    admin_match = re.search(r"\|\s*администратор\s*=([^/]+)/\s*(\d{14})", template)
+    admin_match = re.search(r"\|\s*администратор\s*=([^/\n]+)/\s*(\d{14})", template)
     if admin_match is None:
         # request is still open
         return match.group(0)
@@ -88,7 +88,7 @@ def delete_old_request(match):
         done = True
     else:
         done = status_match.group(1) == "+"
-    admin = admin_match.group(1)
+    admin = admin_match.group(1).strip()
 
     delay = (1 if done else 3) * 24 * 60 * 60
     date = datetime.strptime(admin_match.group(2), TIME_FORMAT)

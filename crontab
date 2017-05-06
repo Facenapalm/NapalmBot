@@ -32,7 +32,7 @@
 0 1-23 * * * jsub -N autopurge-fast   -quiet -o /dev/null -e /dev/null python3 $HOME/autopurge.py --hourly
 0 0    * * * jsub -N autopurge-full   -quiet -o /dev/null -e /dev/null python3 $HOME/autopurge.py --null --hourly --daily
 0 *    * * * jsub -N sandboxes        -quiet -o /dev/null -e /dev/null python3 $HOME/sandbox.py
-0 *    * * * jsub -N fastzka          -quiet -o /dev/null -e /dev/null python3 $HOME/fastzka.py
+0 *    * * * jsub -N fastzka          -quiet -o /dev/null -e /dev/null python3 $HOME/fastzka.py $HOME/data/fastzka.txt
 0 *    * * * jsub -N techtasks        -quiet -o /dev/null -e /dev/null python3 $HOME/techtasks.py
 0 1    * * * jsub -N sort-unrev-files -quiet -o /dev/null -e /dev/null python3 $HOME/sort_unrev_files.py
 0 0    * * * jsub -N validation-stats -quiet -o /dev/null -e /dev/null python3 $HOME/validstats.py $HOME/data/validation.tsv
