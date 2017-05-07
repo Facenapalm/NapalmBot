@@ -89,9 +89,10 @@ def delete_old_request(match):
     else:
         done = status_match.group(1) == "+"
     admin = admin_match.group(1).strip()
+    date_str = admin_match.group(2)
 
     delay = (1 if done else 3) * 24 * 60 * 60
-    date = datetime.strptime(admin_match.group(2), TIME_FORMAT)
+    date = datetime.strptime(date_str, TIME_FORMAT)
     if (UTCNOW - date).total_seconds() < delay:
         return match.group(0)
     else:
@@ -102,7 +103,7 @@ def delete_old_request(match):
             global DELETED_UNDONE_COUNT
             DELETED_UNDONE_COUNT += 1
         if LOGFILE:
-            LOGFILE.write("{}/{}\n".format(admin, date))
+            LOGFILE.write("{}/{}\n".format(admin, date_str))
         return ""
 
 def form_comment():
