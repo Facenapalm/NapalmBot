@@ -9,6 +9,7 @@ import sys
 import os
 import pywikibot
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 FILEDESC = """
 == Краткое описание ==
@@ -26,6 +27,7 @@ FILEDESC = """
 LOCAL = False # set it to True to deny file uploading
 
 def main():
+    """Main script function."""
     argc = len(sys.argv)
     if argc == 1:
         return
@@ -62,13 +64,18 @@ def main():
         single = ufilename == ofilename
 
         def _init_plot(title):
-            "Iternal function for plt initialization."
+            """Iternal function for plt initialization."""
             plt.figure(figsize=(16, 9), dpi=100)
             plt.xticks(axis, data[0])
             plt.xlabel(title)
+            plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
+
+        def _line_plot(data, color, label):
+            """Iternal function for making one plot line."""
+            plt.plot(axis, data, linewidth=3, color=color, label=label)
 
         def _final_plot(filename):
-            "Iternal function for plot saving and uploading."
+            """Iternal function for plot saving and uploading."""
             filepath = os.path.join(tempcat, filename)
             if single:
                 plt.legend()
@@ -84,11 +91,11 @@ def main():
                 os.remove(filepath)
 
         _init_plot(utitle)
-        plt.plot(axis, udata, linewidth=2, color=ucolor, label="Неотпатрулированные")
+        _line_plot(udata, ucolor, "Неотпатрулированные")
         if not single:
             _final_plot(ufilename)
             _init_plot(otitle)
-        plt.plot(axis, odata, linewidth=2, color=ocolor, label="Устаревшие")
+        _line_plot(odata, ocolor, "Устаревшие")
         _final_plot(ofilename)
 
     _plot_pair("статей",
