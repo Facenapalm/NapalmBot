@@ -3,7 +3,7 @@ Script updates article list in ruwiki's {{Случайные статьи с К�
 Written in python 3.5, compatibility with older versions doesn't tested.
 
 Usage:
-    python kul.py
+    python afi.py
 """
 
 import random
