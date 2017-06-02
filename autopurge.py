@@ -1,4 +1,12 @@
-"""Maintainer script for ruwiki's {{очищать кэш}} aka {{autopurge}} template."""
+"""
+Maintainer script for ruwiki's {{очищать кэш}} aka {{autopurge}} template.
+
+Usage:
+    python autopurge.py [--hourly] [--daily] [--null]
+
+Each key process one category, see template documentation; period should be
+correctly set via crontab.
+"""
 
 import sys
 import pywikibot

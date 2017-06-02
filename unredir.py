@@ -1,6 +1,5 @@
 """
 Fixes redirects in navigation templates.
-Written in python 3.5, compatibility with older versions doesn't tested.
 Uses checkwiki.py module.
 
 Usage:

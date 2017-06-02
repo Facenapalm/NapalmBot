@@ -1,7 +1,6 @@
 """
 Pywikipedia bot, which automatically fixes various errors from WikiProject
 CheckWiki. Full list of errors see in ENABLED_ERRORS constant.
-Written in python 3.5, compatibility with older versions doesn't tested.
 Adapted for ruwiki. Do not use this bot on other wikis!
 
 Using as script:

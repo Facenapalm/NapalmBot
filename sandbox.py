@@ -1,4 +1,9 @@
-"""Sandbox cleaner for Russian Wikipedia."""
+"""
+Sandbox cleaner for Russian Wikipedia.
+
+Usage:
+    python sandbox.py
+"""
 
 import pywikibot
 

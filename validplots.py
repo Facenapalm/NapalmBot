@@ -1,8 +1,14 @@
 """
-This script creates validation plots based on statistics collected by validstats.py module.
+This script creates validation plots based on statistics collected by
+validstats.py module.
+Statfile structure: first line - any comment (will be ignored), other lines -
+values, separated with tabs (date, unrev_main, old_main, unrev_file, old_file,
+unrev_template, old_template, unrev_cat, old_cat, unrev_redir, old_redir).
 
 Usage:
     python validplots.py statfile [outdir]
+
+outdir is used for temporary file storing.
 """
 
 import sys

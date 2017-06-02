@@ -1,6 +1,9 @@
 """
 This script is used for collection and analysis of list of unreviewed files in ruwiki.
 This is the maintainer script for [[:ru:User:NapalmBot/файлы]] pages.
+
+Usage:
+    python sort_unrev_files.py
 """
 
 import re
