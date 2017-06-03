@@ -21,7 +21,7 @@ def get_dates():
     return (prev.strftime('%Y%m'), cur.strftime('%Y%m'), localized)
 
 def unificate_name(name):
-    """Process whitespaces, make first letter upper."""
+    """Process whitespaces and make first letter upper."""
     name = re.sub(r"[_ ]+", " ", name).strip()
     if len(name) < 2:
         return name.upper()
@@ -46,7 +46,7 @@ def main():
             else:
                 statistics[name] = 1
         if timestamp > maxdate:
-            filelines += line
+            filelines.append(line)
 
     statarray = []
     for admin, count in statistics.items():
