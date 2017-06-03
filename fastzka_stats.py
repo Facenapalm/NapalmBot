@@ -53,19 +53,19 @@ def main():
         statarray.append((count, admin))
     statarray.sort(reverse=True)
 
-    if len(sortarray) == 0:
+    if len(statarray) == 0:
         return
 
     pagelines = []
     pagelines.append("\n\n== Статистика за {} ==".format(month))
     for count, admin in statarray:
-        pagelines.append("# [[У:{}|]] ({} итогов)".format(admin, count))
+        pagelines.append("# [[У:{admin}|]] ({count} {{{{subst:plural:{count}|итог|итога|итогов}}}})".format(admin=admin, count=count))
     pagelines.append("Отправлено ~~~~")
 
     site = pywikibot.Site()
     page = pywikibot.Page(site, "Обсуждение Википедии:Запросы к администраторам/Быстрые")
     page.text = page.text + "\n".join(pagelines)
-    page.save("Статистика за {}.".format(month), minor=False)
+    page.save("/* Статистика за {} */ Новая тема.".format(month), minor=False)
 
     open(sys.argv[1], "w", encoding="utf-8").write("".join(filelines))
 
