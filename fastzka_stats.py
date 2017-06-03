@@ -53,6 +53,9 @@ def main():
         statarray.append((count, admin))
     statarray.sort(reverse=True)
 
+    if len(sortarray) == 0:
+        return
+
     pagelines = []
     pagelines.append("\n\n== Статистика за {} ==".format(month))
     for count, admin in statarray:
