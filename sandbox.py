@@ -26,7 +26,7 @@ def delayed_edit(page, text, delay=15):
         page.save("Бот: очистка песочницы", force=True)
 
 def main():
-    """Clean all sandboxes."""
+    """Main script function."""
     site = pywikibot.Site()
     for (title, text) in SANDBOXES:
         page = pywikibot.Page(site, title)

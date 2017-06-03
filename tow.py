@@ -10,7 +10,7 @@ import re
 import pywikibot
 
 def main():
-    """Update template."""
+    """Main script function."""
     meta = pywikibot.Site("meta", "meta")
     template = pywikibot.Page(meta, "Template:TOWThisweek")
     match = re.search(r"\[\[:([a-z\-]+):(.*?)\]\]", template.text, flags=re.I)

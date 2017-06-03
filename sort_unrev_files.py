@@ -310,7 +310,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
 
 def main():
-    """Update NapalmBot's subpages."""
+    """Main script function."""
     info = collect_info()
     sort_info(info, "Участник:NapalmBot/файлы")
 

@@ -59,7 +59,7 @@ def count(listname, namespace="*", redirects="nonredirects"):
         return str(len(get_orlist(namespace=namespace, redirects=redirects)))
 
 def main():
-    """Collect statistics and write to file."""
+    """Main script function."""
     if len(sys.argv) == 1:
         return
 

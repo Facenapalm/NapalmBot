@@ -19,7 +19,7 @@ LIST_LEN = 5
 COMMENT = "Обновление списка статей."
 
 def main():
-    """Updates article list in {{Случайные статьи с КУЛ}} template."""
+    """Main script function."""
     site = pywikibot.Site()
 
     category = pywikibot.Category(site, CATEGORY_NAME)

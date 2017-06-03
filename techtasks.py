@@ -156,7 +156,7 @@ def update_techtasks(pagename, beginning, line_format, ending, clear=False,
     page.save(COMMENT, minor=False)
 
 def main():
-    """Updates lists in ruwiki."""
+    """Main script function."""
     update_techtasks("Проект:Технические работы/Задачи из обсуждений",
                      "{{/шапка}}",
                      "{{{{/задача|{params}|ссылка={link}}}}}",
