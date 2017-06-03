@@ -28,14 +28,14 @@
 # m h  dom mon dow   command
 
 # 0 *    * * * jsub -N test           -quiet -o /dev/null -e /dev/null python3 $HOME/test.py
-# 0 *    * * * jsub -N markall        -quiet -o /dev/null -e /dev/null python3 $HOME/markers/markall.py $HOME/markers
 0 1-23 * * * jsub -N autopurge-fast   -quiet -o /dev/null -e /dev/null python3 $HOME/autopurge.py --hourly
 0 0    * * * jsub -N autopurge-full   -quiet -o /dev/null -e /dev/null python3 $HOME/autopurge.py --null --hourly --daily
 0 *    * * * jsub -N sandboxes        -quiet -o /dev/null -e /dev/null python3 $HOME/sandbox.py
 0 *    * * * jsub -N fastzka          -quiet -o /dev/null -e /dev/null python3 $HOME/fastzka.py $HOME/data/fastzka.txt
 0 *    * * * jsub -N techtasks        -quiet -o /dev/null -e /dev/null python3 $HOME/techtasks.py
 0 0    * * * jsub -N validation-stats -quiet -o /dev/null -e /dev/null python3 $HOME/validstats.py $HOME/data/validation.tsv
+0 1    * * * jsub -N checkwiki        -quiet -o /dev/null -e /dev/null python3 $HOME/markers/markall.py $HOME/markers $HOME/data/checkwiki.txt
 0 0    * * 2 jsub -N tow              -quiet -o /dev/null -e /dev/null python3 $HOME/tow.py
 0 0    * * 5 jsub -N sort-unrev-files -quiet -o /dev/null -e /dev/null python3 $HOME/sort_unrev_files.py
 0 0    * * 6 jsub -N afi              -quiet -o /dev/null -e /dev/null python3 $HOME/afi.py
-0 1    4 * * jsub -N fastzka-stats    -quiet -o /dev/null -e /dev/null python3 $HOME/fastzka_stats.py $HOME/data/fastzka.txt
+30 0   4 * * jsub -N fastzka-stats    -quiet -o /dev/null -e /dev/null python3 $HOME/fastzka_stats.py $HOME/data/fastzka.txt
