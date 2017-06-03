@@ -38,3 +38,4 @@
 0 0    * * 2 jsub -N tow              -quiet -o /dev/null -e /dev/null python3 $HOME/tow.py
 0 0    * * 5 jsub -N sort-unrev-files -quiet -o /dev/null -e /dev/null python3 $HOME/sort_unrev_files.py
 0 0    * * 6 jsub -N afi              -quiet -o /dev/null -e /dev/null python3 $HOME/afi.py
+0 1    4 * * jsub -N fastzka-stats    -quiet -o /dev/null -e /dev/null python3 $HOME/fastzka_stats.py $HOME/data/fastzka.txt
