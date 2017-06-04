@@ -1,6 +1,7 @@
 """
 This module contains various functions which helps to create categories using
 category tree from other wikipedia.
+Make sure that checkwiki.py module is available!
 """
 
 import re

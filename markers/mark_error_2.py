@@ -42,7 +42,7 @@ REGEXP = r"""
 FLAGS = re.I | re.VERBOSE
 
 def main():
-    """Downloads list from server and marks relevant errors as done."""
+    """Main script function."""
     site = pywikibot.Site()
     for line in load_page_list(NUMBER):
         page = pywikibot.Page(site, line)

@@ -1,6 +1,6 @@
 """
 Fixes redirects in navigation templates.
-Uses checkwiki.py module.
+Make sure that checkwiki.py module is available!
 
 Usage:
     python unredir.py template1 template2 ... templateN

@@ -1,6 +1,6 @@
 """
 Script updates list of technical tasks in russian Wikipedia.
-Uses checkwiki.py module.
+Make sure that checkwiki.py module is available!
 
 Usage:
     python techtasks.py

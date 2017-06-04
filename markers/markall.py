@@ -10,6 +10,7 @@ import os
 import re
 
 def main():
+    """Main script function."""
     if len(sys.argv) == 1:
         directory = "."
     else:

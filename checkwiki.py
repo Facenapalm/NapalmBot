@@ -1,6 +1,6 @@
 """
 Pywikipedia bot, which automatically fixes various errors from WikiProject
-CheckWiki. Full list of errors see in ENABLED_ERRORS constant.
+Check Wikipedia. Full list of errors see in ENABLED_ERRORS constant.
 Adapted for ruwiki. Do not use this bot on other wikis!
 
 Using as script:
@@ -142,7 +142,7 @@ def allsub(pattern, repl, string, count=0, flags=0):
     return allsubn(pattern, repl, string, count=count, flags=flags)[0]
 
 def unique(lst):
-    """Returns the list without element dublication; element's order might be broken."""
+    """Return the list without element dublication; element's order might be broken."""
     return list(set(lst))
 
 def count_ignore_case(string, substring):
@@ -156,13 +156,13 @@ LABEL_SUFFIX = "\x02"
 
 def ignore(text, ignore_filter):
     """
-    Replaces all text matches regexp with special label.
+    Replace all text matches regexp with special label.
 
     Parameters:
         text - text to be processed;
         ignore_filter - compiled regular expression or string with regexp.
 
-    Returns (new_text, deleted_text_list) tuple.
+    Return (new_text, deleted_text_list) tuple.
     """
     if isinstance(ignore_filter, str):
         ignore_filter = re.compile(ignore_filter, flags=re.I | re.DOTALL)
@@ -171,7 +171,7 @@ def ignore(text, ignore_filter):
     count = 0
 
     def _ignore_line(match_obj):
-        """Replaces founded text with special label."""
+        """Replace founded text with special label."""
         #pylint: disable=undefined-variable
         nonlocal ignored
         ignored.append(match_obj.group(0))
@@ -187,27 +187,27 @@ def ignore(text, ignore_filter):
 
 def deignore(text, ignored):
     """
-    Restores the text returned by the ignore() function.
+    Restore the text returned by the ignore() function.
 
     Parameters:
         text - text to be processed;
         ignored - deleted_text_list, returned by the ignore() function.
 
-    Returns string.
+    Return string.
     """
     def _deignore_line(match_obj):
-        """Replaces founded label with corresponding text."""
+        """Replace founded label with corresponding text."""
         index = int(match_obj.group(1))
         return ignored[index]
 
     return re.sub(LABEL_PREFIX + r"(\d+)" + LABEL_SUFFIX, _deignore_line, text)
 
 def process_link_whitespace(link):
-    """Replaces "_" symbols with spaces, deletes leading spaces."""
+    """Replace "_" symbols with spaces, delete leading spaces."""
     return re.sub(r"[_ ]+", " ", link).strip()
 
 def unificate_link(link):
-    """Processes whitespaces, makes first letter upper."""
+    """Process whitespace, make first letter upper."""
     link = process_link_whitespace(link)
     if len(link) < 2:
         return link.upper()
@@ -215,7 +215,7 @@ def unificate_link(link):
         return link[0].upper() + link[1:]
 
 def compare_links(link1, link2):
-    """Returns True, if two strings refers to the same Wikipedia article."""
+    """Return True if two strings refers to the same Wikipedia article."""
     if link1 is None or link2 is None:
         return link1 == link2
     else:
@@ -224,7 +224,7 @@ def compare_links(link1, link2):
 DATE_REGEXP = r"(?:0?[1-9]|[12]\d|3[01])\.(?:0?[1-9]|1[0-2])\.\d{4}"
 
 def decode_link(link):
-    """Decodes encoded links, such as "%D0%A1#.D0.B2"."""
+    """Decode encoded links, such as "%D0%A1#.D0.B2"."""
     new_link = process_link_whitespace(link)
 
     (new_link, ignored) = ignore(new_link, DATE_REGEXP)
@@ -241,14 +241,14 @@ def decode_link(link):
 
 def process_external_link(match_obj):
     """
-    Converts external link to a wiki-link.
+    Convert external link to a wiki-link.
 
     match_obj is an instance of MatchObject with at least 3 groups:
         group(1) - lang code, for example, "ru" or "en"
         group(2) - encoded link, for example, "%D0%A1%D0%B2%D0%B5%D1%82"
         group(3) - link text, for example, "Light"
 
-    Returns string.
+    Return string.
     """
     code = match_obj.group(1)
     (link, success) = decode_link(match_obj.group(2))
@@ -278,7 +278,8 @@ def process_external_link(match_obj):
 
 def process_link_as_external(text, lang_code=LANG_CODE):
     """
-    Replaces all links to wikipedia on language, matching lang_code regexp, with a wikilinks.
+    Replace all links to wikipedia on the language, matching lang_code regexp,
+    with a wikilinks.
     Used in 90th and 91st errors.
     """
     lang_code = "(" + lang_code + ")"
@@ -302,7 +303,7 @@ def process_link_as_external(text, lang_code=LANG_CODE):
 
 def check_tag_balance(text, tag, recursive=False):
     """
-    Checks if all tags have a pair. Returns True if yes, otherwise False.
+    Check if all tags have a pair. Return True if yes, otherwise False.
     tag parameter must contains only name of the tag, for example, "b" for <b>.
     recursive flag must be True if nested tags are correct. The default value is False.
     """
@@ -326,7 +327,7 @@ def check_tag_balance(text, tag, recursive=False):
 
 def fix_unpair_tag(text, tag, count_selfclosing=True):
     """
-    Fixes self-closing unpair tags and returns (new_text, replacements_count) tuple.
+    Fix self-closing unpair tags and return (new_text, replacements_count) tuple.
     tag parameter must contains only name of the tag, for example, "br" for <br>.
     If self-closing tags are correct, set count_selfclosing param to False.
     self-closing still will be corrected in the name of unification, but those
@@ -345,7 +346,7 @@ def fix_unpair_tag(text, tag, count_selfclosing=True):
 
 def fix_pair_tag(text, tag, recursive=False):
     """
-    Fixes self-closing pair tags and returns (new_text, replacements_count) tuple.
+    Fix self-closing pair tags and return (new_text, replacements_count) tuple.
     tag parameter must contains only name of the tag, for example, "b" for <b>.
     recursive flag must be True if nested tags are correct. The default value is False.
     Checks tag balance: if something going wrong, function willn't change anything.
@@ -365,11 +366,11 @@ def fix_pair_tag(text, tag, recursive=False):
 # errors
 
 def error_001_template_with_keyword(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return re.subn(r"{{" + TEMPLATE + r"\s*", "{{", text, flags=re.I)
 
 def error_002_invalid_tags(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     (text, fixed_br) = fix_unpair_tag(text, "br", count_selfclosing=False)
     (text, fixed_hr) = fix_unpair_tag(text, "hr", count_selfclosing=False)
     fixed_total = fixed_br + fixed_hr
@@ -383,7 +384,7 @@ def error_002_invalid_tags(text):
     return (text, fixed_total)
 
 def error_003_no_references(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     last_ref = text.rfind("<ref")
     if last_ref == -1:
         # no references in page
@@ -434,14 +435,14 @@ def error_003_no_references(text):
     return (text, 0)
 
 def error_009_category_without_br(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     (text, no_after) = re.subn(r"(\[\[категория:.*?\]\][ ]*)(\S)", "\\1\n\\2", text, flags=re.I)
     (text, no_before) = re.subn(r"([^\n])(\[\[категория:.*?\]\])", "\\1\n\\2", text, flags=re.I)
     return (text, no_after + no_before)
 
 def error_016_control_characters(text):
     """
-    Fixes some cases and returns (new_text, replacements_count) tuple.
+    Fix some cases and return (new_text, replacements_count) tuple.
     One of the regexps is copied from wikificator.
     """
     (text, count1) = allsubn(r"(\[\[[^|\[\]]*)[\u00AD\u200E\u200F]+([^\[\]]*\]\])", "\\1\\2", text)
@@ -451,7 +452,7 @@ def error_016_control_characters(text):
 
 def error_017_category_dublicate(text):
     """
-    Fixes the error and returns (new_text, replacements_count) tuple.
+    Fix the error and return (new_text, replacements_count) tuple.
     Always chooses the category with the longest sort key.
     """
     regexp = r"\[\[категория:([^|\[\]\n]+)(?:\|([^|\[\]\n]*))?\]\]\n?"
@@ -459,7 +460,7 @@ def error_017_category_dublicate(text):
     category_list = category_finder.findall(text)
 
     def need_to_delete(match_obj, category_list, cur_cat):
-        """Returns true if it's neccessary to delete founded category."""
+        """Return true if it's neccessary to delete founded category."""
         name = match_obj.group(1)
         key = match_obj.group(2)
         if key is None:
@@ -493,11 +494,11 @@ def error_017_category_dublicate(text):
     return (text, count)
 
 def error_021_category_in_english(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return re.subn(r"\[\[\s*category\s*:", "[[Категория:", text, flags=re.I)
 
 def error_022_category_with_spaces(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     correct = len(re.findall(r"\[\[Категория:[^ ]", text))
     (text, fixed) = re.subn(r"\[\[\s*Категория\s*:", "[[Категория:", text, flags=re.I)
     count1 = fixed - correct
@@ -506,7 +507,7 @@ def error_022_category_with_spaces(text):
     return (text, count1 + count2)
 
 def error_026_bold_tag(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     backup = text
     (text, count) = re.subn(r"<(b|strong)>([^\n<>]+)</\1>", "'''\\2'''", text, flags=re.I)
     if re.search(r"</?(?:b|strong)>", text, flags=re.I):
@@ -515,7 +516,7 @@ def error_026_bold_tag(text):
         return (text, count)
 
 def error_027_mnemonic_codes(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     (text, ignored) = ignore(text, r"https?://\S+")
     (text, count1) = re.subn(r"&#8211;", "–", text)
     (text, count2) = re.subn(r"&#x20;", " ", text)
@@ -523,7 +524,7 @@ def error_027_mnemonic_codes(text):
     return (text, count1 + count2)
 
 def error_032_link_two_pipes(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     (text, ignored) = ignore(text, r"\[\[\s*:?\s*{}.*?\]\]".format(IMAGE))
     (text, count1) = re.subn(r"\[\[([^|\[\]\n]+)\|\|([^|\[\]\n]+)\]\]", "[[\\1|\\2]]", text)
     (text, count2) = re.subn(r"\[\[([^|\[\]\n]+)\|([^|\[\]\n]+)\|\]\]", "[[\\1|\\2]]", text)
@@ -531,11 +532,11 @@ def error_032_link_two_pipes(text):
     return (text, count1 + count2)
 
 def error_034_template_elements(text):
-    """Fixes pagename magicwords and returns (new_text, replacements_count) tuple."""
+    """Fix pagename magicwords and return (new_text, replacements_count) tuple."""
     return re.subn(r"{{(PAGENAME|FULLPAGENAME)}}", "{{subst:\\1}}", text)
 
 def error_038_italic_tag(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     backup = text
     (text, count) = re.subn(r"<(i|em)>([^\n<>]+)</\1>", "''\\2''", text, flags=re.I)
     if re.search(r"</?(?:i|em)>", text, flags=re.I):
@@ -544,17 +545,17 @@ def error_038_italic_tag(text):
         return (text, count)
 
 def error_042_strike_tag(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return re.subn(r"(</?)strike>", "\\1s>", text, flags=re.I)
 
 def error_044_headline_with_bold(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return allsubn(r"^(=+) (.*?)'''(.*?)'''(.*?) \1$", "\\1 \\2\\3\\4 \\1", text, flags=re.M)
 
 def error_048_title_link_in_text(text):
     """
-    Fixes the error and returns (new_text, replacements_count) tuple.
-    Uses static variable title. Make sure you have set it before function call:
+    Fix the error and return (new_text, replacements_count) tuple.
+    Uses static title variable. Make sure you have set it before function call:
         error_048_title_link_in_text.title = "Example"
     Replaces title links with its text without bold tag.
     """
@@ -564,7 +565,7 @@ def error_048_title_link_in_text(text):
     count = 0
 
     def _process_link(match_obj):
-        """Deals with founded wiki-link."""
+        """Deal with founded wiki-link."""
         link = match_obj.group(1)
         name = match_obj.group(2)
         if name is None:
@@ -584,14 +585,14 @@ def error_048_title_link_in_text(text):
 error_048_title_link_in_text.title = None
 
 def error_050_mnemonic_dash(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     (text, count1) = re.subn("&ndash;", "–", text, flags=re.I)
     (text, count2) = re.subn("&mdash;", "—", text, flags=re.I)
     return (text, count1 + count2)
 
 def error_051_interwiki_in_text(text):
     """
-    Fixes obvious cases and returns (new_text, fixed_errors_count) tuple.
+    Fix obvious cases and return (new_text, fixed_errors_count) tuple.
 
     error_051_interwiki_in_text.last_count parameter contains last returned
     replacements_count value.
@@ -604,7 +605,7 @@ def error_051_interwiki_in_text(text):
 error_051_interwiki_in_text.last_count = 0
 
 def error_052_category_in_article(text):
-    """Fixes all wrong categories and returns (new_text, fixed_errors_count) tuple."""
+    """Fix all wrong categories and return (new_text, fixed_errors_count) tuple."""
     ignore_filter = re.compile(r"""(
         <noinclude>.*?</noinclude>|
         <onlyinclude>.*?</onlyinclude>|
@@ -649,15 +650,15 @@ def error_053_interwiki_in_text(text):
     return (text, error_051_interwiki_in_text.last_count)
 
 def error_054_list_with_br(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     return allsubn(r"^(\*.*)<br>[ ]*$", "\\1", text, flags=re.M)
 
 def error_057_headline_with_colon(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return re.subn(r"^(=+) (.*?): \1$", "\\1 \\2 \\1", text, flags=re.M)
 
 def error_059_template_with_br(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     ignore_filter = re.compile(r"(\[\[.*?\]\]|{\|.*?\|})", re.DOTALL)
     # pipes can be also used in tables and wikilinks
     # we shouldn't detect these uses (expecially tables)
@@ -668,18 +669,18 @@ def error_059_template_with_br(text):
     return (text, count)
 
 def error_062_url_without_http(text):
-    """Fixes the error in refs and returns (new_text, replacements_count) tuple."""
+    """Fix the error in refs and return (new_text, replacements_count) tuple."""
     return re.subn(r"(<ref[^<>]*>)\s*(\[?)\s*www\.", "\\1\\2http://www.", text)
 
 def error_063_small_tag_in_refs(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     regexp = r"(<(ref|su[bp])[^>]*>)<small>([^<>]+)</small>(</\2>)"
     return re.subn(regexp, "\\1\\3\\4", text, flags=re.I)
 
 def error_064_link_equal_linktext(text):
     """
-    Fixes the error and returns (new_text, replacements_count) tuple.
-    Also corrects links with spaces.
+    Fix the error and return (new_text, replacements_count) tuple.
+    Also correct links with spaces.
     """
     count = 0
 
@@ -714,25 +715,25 @@ def error_064_link_equal_linktext(text):
     return (text, count)
 
 def error_065_image_desc_with_br(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return re.subn(r"(\[\[Файл:[^\]]+)\s*<br>\s*(\]\])", "\\1\\2", text)
 
 def error_067_ref_after_dot(text):
     """
     [WARNING: dangerous to use without manual control]
-    Fixes references after dots, commas, colons and semicolons.
-    Returns (new_text, replacements_count) tuple.
+    Fix references after dots, commas, colons and semicolons.
+    Return (new_text, replacements_count) tuple.
     """
     return allsubn(r"([.,:;])(<ref[^/>]*/>|<ref[^/>]*>.*?</ref>)", "\\2\\1", text, flags=re.DOTALL)
 
 def error_068_interwiki_link(text):
     """
-    Fixes links to Special:BookSearch and direct links, written like interwiki
+    Fix links to Special:BookSearch and direct links, written like interwiki
     ones. For example, for ruwiki fixes [[:ru:Example|Something]].
-    Returns (new_text, replacements_count) tuple.
+    Return (new_text, replacements_count) tuple.
     """
     def _check_link(match_obj):
-        """Checks if founded link is a link to a file or a category and inserts extra ":" if so."""
+        """Check if founded link is a link to a file or a category and insert extra ":" if so."""
         link = match_obj.group(2).lstrip().lower()
         if re.search(r"^" + IMAGE, link) is None and re.search(r"^" + CATEGORY, link) is None:
             return match_obj.group(1) + match_obj.group(2)
@@ -747,7 +748,7 @@ def error_068_interwiki_link(text):
     return (text, direct + books)
 
 def error_069_isbn_wrong_syntax(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     # ISBNs can be found in links and ref names
     ignore_filter = re.compile(r"""(https?://\S+|<ref.*?>)""", re.I)
     (text, ignored) = ignore(text, ignore_filter)
@@ -767,11 +768,11 @@ def error_069_isbn_wrong_syntax(text):
     return (text, count1 + count2 + count3 + count4)
 
 def error_070_isbn_wrong_length(text):
-    """Fixes using russian Х/х instead of english X."""
+    """Fix russian Х/х instead of english X."""
     return re.subn(r"((?:ISBN |\|isbn\s*=\s*)(?:[0-9]-?){9})Х", "\\1X", text, flags=re.I)
 
 def error_080_ext_link_with_br(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     (text, inref) = re.subn(r"(<ref[^<>/]*>\[https?://[^\[\]]*?)(</ref>)", "\\1]\\2",
                             text, flags=re.I)
     (text, broken) = allsubn(r"(\[https?://[^\[\]]*?)\n([^\[\]]*?\])", "\\1 \\2",
@@ -780,7 +781,7 @@ def error_080_ext_link_with_br(text):
     return (text, inref + inlist + broken)
 
 def error_085_empty_tag(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     full_count = 0
     cur_count = 1
     while cur_count:
@@ -794,7 +795,7 @@ def error_085_empty_tag(text):
     return (text, full_count)
 
 def error_086_ext_link_two_brackets(text):
-    """Fixes some cases and returns (new_text, replacements_count) tuple."""
+    """Fix some cases and return (new_text, replacements_count) tuple."""
     # case: [[http://youtube.com/|YouTube]]
     def _process_link(match_obj):
         """Deals with founded wiki-link."""
@@ -813,44 +814,44 @@ def error_086_ext_link_two_brackets(text):
     return (text, count1 + count2)
 
 def error_088_dsort_with_spaces(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     correct = len(re.findall(r"{{DEFAULTSORT:\S", text))
     (text, fixed) = re.subn(r"{{\s*DEFAULTSORT\s*:\s*", "{{DEFAULTSORT:", text, flags=re.I)
     return (text, fixed - correct)
 
 def error_090_internal_link_as_ext(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return process_link_as_external(text)
 
 def error_091_interwiki_link_as_ext(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return process_link_as_external(text, INTERWIKI)
 
 def error_093_double_http(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return allsubn(r"https?:/?/?(?=https?://)", "", text, flags=re.I)
 
 def error_098_unclosen_sub(text):
-    """Fixes self-closing tags and returns (new_text, replacements_count) tuple."""
+    """Fix self-closing tags and return (new_text, replacements_count) tuple."""
     return fix_pair_tag(text, "sub")
 
 def error_099_unclosen_sup(text):
-    """Fixes self-closing tags and returns (new_text, replacements_count) tuple."""
+    """Fix self-closing tags and return (new_text, replacements_count) tuple."""
     return fix_pair_tag(text, "sup")
 
 def error_101_sup_in_numbers(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return re.subn(r"(\d)<sup>(st|nd|rd|th)</sup>", "\\1\\2", text, flags=re.I)
 
 def error_103_pipe_in_wikilink(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     return re.subn(r"(\[\[[^\{\]|\n]+){{!}}([^\{\]|\n]+\]\])", "\\1|\\2", text)
 
 def error_104_quote_marks_in_refs(text):
-    """Fixes the error and returns (new_text, replacements_count) tuple."""
+    """Fix the error and return (new_text, replacements_count) tuple."""
     count3 = 0
     def quote_ref(match):
-        """Quotes ref name if it's neccessary."""
+        """Quote ref name if it's neccessary."""
         #pylint: disable=undefined-variable
         nonlocal count3
         name = match.group(2)
@@ -871,8 +872,8 @@ def error_104_quote_marks_in_refs(text):
 
 def minor_fixes_before(text):
     """
-    Fixes some minor defects. Automatically called before standart filters.
-    Always returns (new_text, 0) tuple.
+    Fix some minor defects. This function is called before standart filters.
+    Always return (new_text, 0) tuple.
     """
     text = allsub(r"\n[ ]+\n", "\n\n", text) # spaces in the empty line
 
@@ -894,8 +895,8 @@ def minor_fixes_before(text):
 
 def minor_fixes_after(text):
     """
-    Fixes some minor defects. Automatically called after standart filters.
-    Always returns (new_text, 0) tuple.
+    Fix some minor defects. This function is called after standart filters.
+    Always return (new_text, 0) tuple.
     """
     text = re.sub(r"(\[\[:?)" + CATEGORY + r"(\s*)", "\\1Категория:", text, flags=re.I)
     text = re.sub(r"(\[\[:?)" + MODULE   + r"(\s*)", "\\1Модуль:", text, flags=re.I)
@@ -1026,7 +1027,7 @@ COMMENT_MINOR = "малые правки"
 
 def get_error_num(function):
     """
-    Extracts first number from function name and returns string with it.
+    Extract first number from function name and return string with it.
     Leading zeroes will be truncated.
     """
     match_obj = re.search(r"\d+", function.__name__)
@@ -1039,7 +1040,7 @@ def get_error_num(function):
     return result
 
 def mark_error_done(error_num, page_name):
-    """Marks error as done in CheckWiki web interface."""
+    """Mark error as done in CheckWiki web interface."""
     error_num = str(error_num)
     if error_num == "0":
         return
@@ -1048,12 +1049,12 @@ def mark_error_done(error_num, page_name):
     urlopen(CHECKWIKI_URL + urlencode(params)).read()
 
 def mark_error_list_done(error_list, page_name):
-    """Marks all errors from list as done in CheckWiki web interface."""
+    """Mark all errors from list as done in CheckWiki web interface."""
     for error_num in error_list:
         mark_error_done(error_num, page_name)
 
 def load_page_list(error_num, offset=0):
-    """Downloads list of pages with error_num error from CheckWiki server."""
+    """Download list of pages with error_num error from CheckWiki server."""
     params = {"project": PROJECT, "view": "bots", "id": str(error_num), "offset": str(offset)}
     data = urlopen(CHECKWIKI_URL + urlencode(params)).read().decode()
     if not "Check Wikipedia" in data:
@@ -1069,10 +1070,10 @@ def load_page_list(error_num, offset=0):
 
 def process_text(text, title=None):
     """
-    Fixes all errors from ENABLED_ERRORS and returns (new_text, fixed_errors_list) tuple.
-    Ignores text inside comments and tags:
+    Fix all errors from ENABLED_ERRORS and return (new_text, fixed_errors_list) tuple.
+    Ignore text inside comments and some tags:
     <nowiki>, <source>, <tt>, <code>, <pre>, <syntaxhighlight>, <templatedata>
-    (see IGNORE_FILTER regexp)
+    (see IGNORE_FILTER regexp for full list)
     """
     error_048_title_link_in_text.title = title
 
@@ -1088,16 +1089,16 @@ def process_text(text, title=None):
     return (text, fixed_errors)
 
 def has_major(fixes_list):
-    """Returns True if list, passed as parameter, has at least one major error fix."""
+    """Return True if list, passed as parameter, has at least one major error fix."""
     return any(fix in MAJOR_ERRORS for fix in fixes_list)
 
 def has_minor(fixes_list):
-    """Returns True if list, passed as parameter, has at least one major error fix."""
+    """Return True if list, passed as parameter, has at least one minor error fix."""
     return any(not fix in MAJOR_ERRORS for fix in fixes_list)
 
 def get_comment(fixes_list, extra_comment_parts=None):
     """
-    Forms Wikipedia's edit comment from list of fixed errors (in russian language).
+    Form edit comment from list of fixed errors (in russian language).
 
     Parameters:
         fixes_list - list of fixed errors, for example, returned by process_text function.
@@ -1127,8 +1128,8 @@ def get_comment(fixes_list, extra_comment_parts=None):
 
 def process_page(page, force_minor=False):
     """
-    Fixes errors in page and sends changes to the server.
-    Function also marks corresponding errors in CheckWiki web interface.
+    Fix errors in page and send changes to the server.
+    Also mark corresponding errors in CheckWiki web interface.
 
     Parameters:
         page is an instance of pywikibot.Page.
@@ -1137,8 +1138,8 @@ def process_page(page, force_minor=False):
 
     Function returns (success, fixed_errors_list) tuple. Success is True if the page was saved.
 
-    Note: if you added some additional functions to ENABLED_ERRORS list, make sure that all names of
-    them contains error number; otherwise it will not marked as "Done" in CheckWiki project.
+    Note: if you've added some additional functions to ENABLED_ERRORS list, make sure that all names
+    of them contain error number; otherwise it will not marked as "Done" in CheckWiki project.
     """
     error_value = (False, [])
     if not page.exists():
@@ -1166,7 +1167,7 @@ def process_page(page, force_minor=False):
     return (True, fixed_errors)
 
 def log(title, errlist=None, success=True):
-    """Prints log line to console, for example, "Portal Stories: Mel - [1, 2, 10] ... ok"."""
+    """Print log line to console, for example, "Portal Stories: Mel - [1, 2, 10] ... ok"."""
     title = title.strip()
 
     if errlist is None or errlist == []:
@@ -1183,8 +1184,8 @@ def log(title, errlist=None, success=True):
 
 def process_list(site, titles, force_minor=False, log_needed=True):
     """
-    Fixes errors in every page of the list and sends changes to the server.
-    Function also marks corresponding errors in CheckWiki web interface.
+    Fix errors in every page of the list and sends changes to the server.
+    Also marks corresponding errors in CheckWiki web interface.
 
     Parameters:
         site is an instance of pywikibot.Site.
@@ -1194,10 +1195,10 @@ def process_list(site, titles, force_minor=False, log_needed=True):
     If force_minor is True, the changes will be sent to the server even if there's no major fixes.
     If log_needed is True, function will be shown fixed errors list for every page.
 
-    Returns fixed pages count.
+    Return fixed pages count.
 
-    Note: if you added some additional functions to ENABLED_ERRORS list, make sure that all names of
-    them contains error number; otherwise it will not marked as "Done" in CheckWiki project.
+    Note: if you've added some additional functions to ENABLED_ERRORS list, make sure that all names
+    of them contain error number; otherwise it will not marked as "Done" in CheckWiki project.
     """
     count = 0
     for title in titles:
@@ -1210,8 +1211,8 @@ def process_list(site, titles, force_minor=False, log_needed=True):
 
 def process_server(site, num, force_minor=False, log_needed=True):
     """
-    Downloads list from server and fixes pages with current error.
-    Function also marks corresponding errors in CheckWiki web interface.
+    Download list from server and fixes pages with current error.
+    Also mark corresponding errors in CheckWiki web interface.
 
     Parameters:
         site is an instance of pywikibot.Site.
@@ -1221,7 +1222,7 @@ def process_server(site, num, force_minor=False, log_needed=True):
     If force_minor is True, the changes will be sent to the server even if there's no major fixes.
     If log_needed is True, function will be shown fixed errors list for every page.
 
-    Returns fixed pages count.
+    Return fixed pages count.
     """
     global MAJOR_ERRORS
     backup = MAJOR_ERRORS
@@ -1237,7 +1238,7 @@ def process_server(site, num, force_minor=False, log_needed=True):
     return result
 
 def main():
-    """Parses console parameters and fixes corresponding pages."""
+    """Parse console parameters and fixes corresponding pages."""
     if len(sys.argv) == 1:
         print(HELP_STRING)
         return

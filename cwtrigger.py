@@ -1,6 +1,7 @@
 """
 Script checks if checkwiki has a new dump scanned, and, if so, launches
 markers/markall.py and checkwiki.py for obvious errors.
+Make sure that checkwiki.py module is available!
 
 Usage:
     python cwtrigger.py path-to-markers datafile
@@ -62,14 +63,14 @@ def main():
     cur_date = re.search(r"Last scanned dump (\d{4}-\d{2}-\d{2})", datepage).group(1)
 
     if cur_date > prev_date:
+        with open(filename, "w") as datefile:
+            datefile.write(cur_date)
+
         markall.main()
 
         site = pywikibot.Site()
         for num in ERRORS:
             checkwiki.process_server(site, num)
-
-    with open(filename, "w") as datefile:
-        datefile.write(cur_date)
 
 if __name__ == "__main__":
     main()
