@@ -14,6 +14,8 @@ outdir is used for temporary file storing.
 import sys
 import os
 import pywikibot
+import matplotlib
+matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
