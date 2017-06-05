@@ -363,6 +363,67 @@ def fix_pair_tag(text, tag, recursive=False):
     else:
         return (old_text, 0)
 
+def insert_references(text, last_ref=0):
+    """
+    Insert references section to the page according to local manual of style.
+    last_ref parameter is used for transfering last reference position: it will be
+    used for additional checks. If last_ref equals -1, references section will not
+    be added.
+    You can change FIX_UNSAFE_MISSING_REFERENCES global variable to allow unsafe
+    insertions.
+    Return (new_text, is_inserted) tuple, where is_inserted is 0 or 1.
+    """
+    if last_ref == -1:
+        # no references in page
+        return (text, 0)
+    if (re.search(r"{{\s*(?:примечания|список[_ ]примечаний|reflist\+?)", text, flags=re.I) or
+        re.search(r"<\s*references", text, flags=re.I)):
+        # references are already here
+        return (text, 0)
+    if ("noinclude" in text or "includeonly" in text or "onlyinclude" in text):
+        # page is included somewhere - dangerous to fix, we don't know how it will affect to this page
+        return (text, 0)
+
+    # try to place references into corresponding section
+    section = re.search(r"^==[ ]*Примечани[ея][ ]*==$", text, flags=re.M)
+    if section:
+        pos = section.end(0)
+        if pos < last_ref:
+            # that's not a solution
+            return (text, 0)
+        if re.match(r"\s*($|\n==|\[\[Категория:)", text[pos:]) is None:
+            if not (FIX_UNSAFE_MISSING_REFERENCES and
+                re.match(r"({{[^:{}][^{}]*}}|\[\[Категория:[^\[\]]+\]\]|\s)*$", text[pos:])):
+                # section isn't empty
+                return (text, 0)
+        text = text[:pos] + "\n{{примечания}}" + text[pos:]
+        return (text, 1)
+
+    # try to place references before special sections
+    section = re.search(r"^==[ ]*(Литература|Ссылки|Источники)[ ]*==$", text, flags=re.M | re.I)
+    if section:
+        start = section.start(0)
+        end = section.end(0)
+        if start < last_ref:
+            return (text, 0)
+        if re.match(r"\s*($|\[\[Категория:)", text[end:]):
+            # section is empty
+            text = text[:start] + "== Примечания ==\n{{примечания}}" + text[end:]
+        else:
+            text = text[:start] + "== Примечания ==\n{{примечания}}\n\n" + text[start:]
+        return (text, 1)
+
+    # place references at the end of the article, just before categories and templates
+    if FIX_UNSAFE_MISSING_REFERENCES:
+        section = re.search(r"\n({{[^:{}][^{}]*}}|\[\[Категория:[^\[\]]+\]\]|\s)*$", text)
+        pos = section.start(0)
+        if pos < last_ref:
+            return (text, 0)
+        text = text[:pos] + "\n\n== Примечания ==\n{{примечания}}" + text[pos:]
+        return (text, 1)
+
+    return (text, 0)
+
 # errors
 
 def error_001_template_with_keyword(text):
@@ -385,54 +446,7 @@ def error_002_invalid_tags(text):
 
 def error_003_no_references(text):
     """Fix some cases and return (new_text, replacements_count) tuple."""
-    last_ref = text.rfind("<ref")
-    if last_ref == -1:
-        # no references in page
-        return (text, 0)
-    if (re.search(r"{{\s*(?:примечания|список[_ ]примечаний|reflist\+?)", text, flags=re.I) or
-        re.search(r"<\s*references", text, flags=re.I)):
-        # references already here
-        return (text, 0)
-
-    # try to place references into corresponding section
-    section = re.search(r"^==[ ]*Примечани[ея][ ]*==$", text, flags=re.M)
-    if section:
-        pos = section.end(0)
-        if pos < last_ref:
-            # that's not a solution
-            return (text, 0)
-        if re.match(r"\s*($|\n==|\[\[Категория:)", text[pos:]) is None:
-            if not (FIX_UNSAFE_MISSING_REFERENCES and
-                re.match(r"(\n{{[^{}]+}}|\[\[Категория:[^\[\]]+\]\]|\s)*$", text[pos:])):
-                # section isn't empty
-                return (text, 0)
-        text = text[:pos] + "\n{{примечания}}" + text[pos:]
-        return (text, 1)
-
-    # try to place references before special sections
-    section = re.search(r"^==[ ]*(Литература|Ссылки|Источники)[ ]*==$", text, flags=re.M | re.I)
-    if section:
-        start = section.start(0)
-        end = section.end(0)
-        if start < last_ref:
-            return (text, 0)
-        if re.match(r"\s*($|\[\[Категория:)", text[end:]):
-            # section is empty
-            text = text[:start] + "== Примечания ==\n{{примечания}}" + text[end:]
-        else:
-            text = text[:start] + "== Примечания ==\n{{примечания}}\n\n" + text[start:]
-        return (text, 1)
-
-    # place references into end of article, just before categories and templates (navigational etc)
-    if FIX_UNSAFE_MISSING_REFERENCES:
-        section = re.search(r"(\n{{[^{}]+}}|\[\[Категория:[^\[\]]+\]\]|\s)*$", text)
-        pos = section.start(0)
-        if pos < last_ref:
-            return (text, 0)
-        text = text[:pos] + "\n\n== Примечания ==\n{{примечания}}" + text[pos:]
-        return (text, 1)
-
-    return (text, 0)
+    return insert_references(text, text.rfind("<ref"))
 
 def error_009_category_without_br(text):
     """Fix the error and return (new_text, replacements_count) tuple."""
