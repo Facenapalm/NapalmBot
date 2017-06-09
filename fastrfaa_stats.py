@@ -1,9 +1,9 @@
 """
 Publishes a list of the most active administrators based on logfile,
-created by fastzka.py script, and deletes old records from log.
+created by fastrfaa.py script, and deletes old records from log.
 
 Usage:
-    python fastzka_stats.py logfile
+    python fastrfaa_stats.py logfile
 """
 
 import re

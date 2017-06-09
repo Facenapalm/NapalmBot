@@ -1,10 +1,11 @@
 """
-Maintainer script for ruwiki's admin request table ([[:ru:ВП:ЗКАБ]]).
+Maintainer script for ruwiki's administrator attention requests table
+([[:ru:ВП:ЗКАБ]]).
 
 Log file is used for saving "администратор" field in deleted requests.
 
 Usage:
-    python fastzka.py [logfile]
+    python fastrfaa.py [logfile]
 """
 
 import re
