@@ -37,7 +37,7 @@
 0 0    * * * jsub -N validation-stats -quiet -o /dev/null -e /dev/null python3 $HOME/validstats.py $HOME/data/validation.tsv
 0 1    * * * jsub -N checkwiki        -quiet -o /dev/null -e /dev/null python3 $HOME/cwtrigger.py $HOME/markers $HOME/data/checkwiki.txt
 # weekly
-0 0    * * 1 jsub -N validation-plots -quiet -o /dev/null -e /dev/null python3 $HOME/validplots.py $HOME/data/validation.tsv $HOME/data/
+0 12   * * 0 jsub -N validation-plots -quiet -o /dev/null -e /dev/null python3 $HOME/validplots.py $HOME/data/validation.tsv $HOME/data/
 0 0    * * 2 jsub -N tow              -quiet -o /dev/null -e /dev/null python3 $HOME/tow.py
 0 0    * * 5 jsub -N sort-unrev-files -quiet -o /dev/null -e /dev/null python3 $HOME/sort_unrev_files.py
 0 0    * * 6 jsub -N afi              -quiet -o /dev/null -e /dev/null python3 $HOME/afi.py
