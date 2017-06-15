@@ -154,7 +154,7 @@ def count_ignore_case(string, substring):
 LABEL_PREFIX = "\x01"
 LABEL_SUFFIX = "\x02"
 
-def ignore(text, ignore_filter):
+def ignore(text, ignore_filter=IGNORE_FILTER):
     """
     Replace all text matches regexp with special label.
 

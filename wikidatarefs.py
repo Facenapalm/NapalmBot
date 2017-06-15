@@ -17,7 +17,9 @@ def main():
     pages = [pywikibot.Page(site, page) for page in refs if not page in references]
     # converting to titles and back is needed for saving memory
     for page in pages:
-        (text, flag) = checkwiki.insert_references(page.text)
+        (text, ignored) = checkwiki.ignore(page.text)
+        (text, flag) = checkwiki.insert_references(text)
+        page.text = checkwiki.deignore(text, ignored)
         if flag:
             (text, fixes) = checkwiki.process_text(text)
             page.text = text
