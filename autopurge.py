@@ -43,7 +43,7 @@ def process_null(site):
 def log(site, respond):
     """Edit template status page."""
     page = pywikibot.Page(site, "Шаблон:Очищать кэш/статус")
-    page.text = "~~~~. Обработано " + "; ".join(respond)
+    page.text = "~~~~. Обработано " + "; ".join(respond) + "<noinclude>\n[[Категория:Википедия:Подстраницы шаблонов]]\n</noinclude>"
     page.save("Отчёт.")
 
 KEYS = {
