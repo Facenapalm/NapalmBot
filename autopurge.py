@@ -52,16 +52,20 @@ KEYS = {
     "--null": process_null
 }
 
+DISABLE_LOG = "--nolog"
+
 def main():
     """Get console arguments and call corresponding fucntions."""
     if len(sys.argv) == 1:
         return
+    args = sys.argv[1:]
     site = pywikibot.Site()
     respond = []
-    for arg in sys.argv[1:]:
+    for arg in args:
         if arg in KEYS:
             respond.append(KEYS[arg](site))
-    log(site, respond)
+    if DISABLE_LOG not in args:
+        log(site, respond)
 
 if __name__ == "__main__":
     main()
