@@ -12,13 +12,14 @@ import sys
 import pywikibot
 import pywikibot.exceptions
 
-def process_purge(site, catname):
+def process_purge(site, catname, limit=500):
     """Purge all pages from category and return status for logging."""
     members = list(pywikibot.Category(site, catname).members())
-    if site.purgepages(members):
-        return str(len(members))
-    else:
-        return "неожиданный ответ сервера"
+    length = len(members);
+    for i in range(0, length, limit):
+        if not site.purgepages(members[i:i+limit]):
+            return "неожиданный ответ сервера"
+    return str(length)
 
 def process_hourly(site):
     """Purge all hourly-purged pages and return log part."""
