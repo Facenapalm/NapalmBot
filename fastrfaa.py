@@ -18,8 +18,10 @@ REGEXP = re.compile(r"""
     ==[ ]*(?P<header>.*?)[ ]*==\s+
     (?P<section>
         <onlyinclude>\s*
-        (?:[^<]|<(?!/?onlyinclude))*?\s*
-        </onlyinclude>
+        (?P<template>
+            (?:[^<]|<(?!/?onlyinclude))*?
+        )
+        \s*</onlyinclude>
     )
 """, re.I | re.VERBOSE)
 
@@ -27,9 +29,12 @@ TIME_FORMAT = "%Y%m%d%H%M%S"
 UTCNOW = datetime.utcnow()
 UTCNOWSTR = UTCNOW.strftime(TIME_FORMAT)
 
+MOVED_TEXT = ""
+
 CORRECTED_COUNT = 0
 DELETED_DONE_COUNT = 0
 DELETED_UNDONE_COUNT = 0
+MOVED_COUNT = 0
 
 if len(sys.argv) > 1:
     LOGFILE = open(sys.argv[1], "a", encoding="utf-8")
@@ -47,19 +52,19 @@ def correct_request(match):
     corrected = False
     indent = match.group("indent")
     header = match.group("header")
-    template = match.group("section")
+    section = match.group("section")
 
     # missing timestamp fix
-    (template, flag) = re.subn(
+    (section, flag) = re.subn(
         r"(\|\s*администратор\s*=[^/\n]*[^/\s][^/\n]*)\n",
         "\\1/" + UTCNOWSTR + "\n",
-        template)
+        section)
     if flag > 0:
         corrected = True
 
     # wrong header fix
-    question = re.search(r"\|\s*вопрос\s*=(.*)", template)
-    timestamp = re.search(r"\|\s*автор\s*=[^/]+/\s*(\d{14})", template)
+    question = re.search(r"\|\s*вопрос\s*=(.*)", section)
+    timestamp = re.search(r"\|\s*автор\s*=[^/]+/\s*(\d{14})", section)
     if question is None or timestamp is None:
         # request is completely broken
         return match.group(0)
@@ -73,17 +78,39 @@ def correct_request(match):
     if corrected:
         global CORRECTED_COUNT
         CORRECTED_COUNT += 1
-        return "{}== {} ==\n{}".format(indent, header, template)
+        return "{}== {} ==\n{}".format(indent, header, section)
     else:
         return match.group(0)
 
+def move_old_request(template):
+    """Forms text for (non-fast) rfaa in MOVED_TEXT."""
+    global MOVED_TEXT
+    global MOVED_COUNT
+    parts = re.search(r"\|\s*вопрос\s*=(.*)", template).group(1).strip().split("/")
+    if len(parts) == 2:
+        header = parts[1]
+    else:
+        header = parts[0]
+    MOVED_TEXT += "== {} ==\n".format(header)
+    MOVED_TEXT += re.sub(r"(ЗКА:Быстрый запрос)", "subst:\\1", template)
+    MOVED_TEXT += "\n* {{block-small|Перенесено со страницы быстрых запросов ботом, поскольку запрос не был выполнен в течение 7 дней. ~~~~}}"
+    MOVED_TEXT += "\n\n"
+    MOVED_COUNT += 1
+
 def delete_old_request(match):
     """Process one table row and delete it if it's neccessary."""
-    template = match.group("section")
+    template = match.group("template")
     status_match = re.search(r"\|\s*статус\s*=\s*([+-])", template)
+    date_match = re.search(r"\|\s*автор\s*=[^/]+/\s*(\d{14})", template)
     admin_match = re.search(r"\|\s*администратор\s*=([^/\n]+)/\s*(\d{14})", template)
     if admin_match is None:
         # request is still open
+        if date_match is not None:
+            date = datetime.strptime(date_match.group(1), TIME_FORMAT)
+            if (UTCNOW - date).total_seconds() > 7 * 24 * 60 * 60:
+                # very old request that should be moved to rfaa
+                move_old_request(template)
+                return ""
         return match.group(0)
     if status_match is None:
         done = True
@@ -117,6 +144,8 @@ def form_comment():
         deleted_parts.append(plural_phrase(DELETED_DONE_COUNT, "выполненн"))
     if DELETED_UNDONE_COUNT > 0:
         deleted_parts.append(plural_phrase(DELETED_UNDONE_COUNT, "невыполненн"))
+    if MOVED_COUNT > 0:
+        deleted_parts.append(plural_phrase(MOVED_COUNT, "перенесённ"))
     deleted = ", ".join(deleted_parts)
 
     if CORRECTED_COUNT:
@@ -136,17 +165,29 @@ def form_comment():
 def main():
     """Main script function."""
     site = pywikibot.Site()
-    page = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые")
-    text = page.text
+    fast = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые")
+    ftext = fast.text
 
-    text = minor_fixes(text)
-    text = REGEXP.sub(correct_request, text)
-    text = REGEXP.sub(delete_old_request, text)
+    ftext = minor_fixes(ftext)
+    ftext = REGEXP.sub(correct_request, ftext)
+    ftext = REGEXP.sub(delete_old_request, ftext)
+
+    if MOVED_TEXT != "":
+        rfaa = pywikibot.Page(site, "Википедия:Запросы к администраторам")
+        rtext = rfaa.text
+        insert = rtext.find("==")
+        if insert == -1:
+            insert = len(rtext)
+        rtext = rtext[:insert] + MOVED_TEXT + rtext[insert:]
+        rfaa.text = rtext
+        open("rfaa.txt", "w", encoding="utf-8").write(rtext)
+        # rfaa.save("Перенос залежавшихся быстрых запросов.", minor=False)
 
     comment = form_comment()
     if comment:
-        page.text = text
-        page.save(comment)
+        fast.text = ftext
+        open("fast.txt", "w", encoding="utf-8").write(ftext)
+        # fast.save(comment)
 
 if __name__ == "__main__":
     main()
