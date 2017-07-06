@@ -91,7 +91,7 @@ def move_old_request(template):
         header = parts[1]
     else:
         header = parts[0]
-    MOVED_TEXT += "== {} ==\n".format(header)
+    MOVED_TEXT += "== {} (с ЗКАБ) ==\n".format(header)
     MOVED_TEXT += re.sub(r"(ЗКА:Быстрый запрос)", "subst:\\1", template)
     MOVED_TEXT += "\n* {{block-small|Перенесено со страницы быстрых запросов ботом, поскольку запрос не был выполнен в течение 7 дней. ~~~~}}"
     MOVED_TEXT += "\n\n"
