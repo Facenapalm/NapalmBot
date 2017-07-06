@@ -180,14 +180,12 @@ def main():
             insert = len(rtext)
         rtext = rtext[:insert] + MOVED_TEXT + rtext[insert:]
         rfaa.text = rtext
-        open("rfaa.txt", "w", encoding="utf-8").write(rtext)
-        # rfaa.save("Перенос залежавшихся быстрых запросов.", minor=False)
+        rfaa.save("Перенос залежавшихся быстрых запросов.", minor=False)
 
     comment = form_comment()
     if comment:
         fast.text = ftext
-        open("fast.txt", "w", encoding="utf-8").write(ftext)
-        # fast.save(comment)
+        fast.save(comment)
 
 if __name__ == "__main__":
     main()
