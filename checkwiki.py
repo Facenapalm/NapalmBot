@@ -437,7 +437,7 @@ def error_002_invalid_tags(text):
     fixed_total = fixed_br + fixed_hr
 
     (text, fixed_clear) = re.subn(r"<br clear=\"?(left|right)\"?\s*/?>", "{{clear|\\1}}", text)
-    (text, fixed_clear_all) = re.subn(r"<br clear=\"?all\"?\s*/?>", "{{clear}}", text)
+    (text, fixed_clear_all) = re.subn(r"<br clear=\"?(?:all|both)\"?\s*/?>", "{{clear}}", text)
     fixed_total += fixed_clear + fixed_clear_all
 
     (text, fixed_small) = fix_pair_tag(text, "small")
