@@ -19,7 +19,7 @@ def main():
     for page in pages:
         (text, ignored) = checkwiki.ignore(page.text)
         (text, flag) = checkwiki.insert_references(text)
-        page.text = checkwiki.deignore(text, ignored)
+        text = checkwiki.deignore(text, ignored)
         if flag:
             (text, fixes) = checkwiki.process_text(text)
             page.text = text
