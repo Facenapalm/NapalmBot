@@ -33,7 +33,7 @@
 0 *    * * * jsub -N fastrfaa         -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/fastrfaa.py $HOME/data/fastrfaa.txt
 0 *    * * * jsub -N techtasks        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/techtasks.py
 # daily
-30 */6 * * * jsub -N autodumpscan     -quiet -o /$HOME/logs -e /dev/null python3 $HOME/scripts/autodumpscan.py
+30 */6 * * * jsub -N autodumpscan     -quiet -o /$HOME/logs -e /dev/null -mem 2G python3 $HOME/scripts/autodumpscan.py
 0 0    * * * jsub -N autopurge-full   -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/autopurge.py --null --hourly --daily --nolog
 0 0    * * * jsub -N validation-stats -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/validstats.py $HOME/data/validation.tsv
 0 1    * * * jsub -N checkwiki        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/cwtrigger.py $HOME/scripts/markers $HOME/data/checkwiki.txt

@@ -1,4 +1,5 @@
-"""Dump scanner for ToolForge. In work."""
+"""Dump scanner for ToolForge."""
+import codecs
 import os
 import os.path
 import re
@@ -51,12 +52,13 @@ class Processor(object):
         self.flags = 0
 
         self.prefix = ""
-        self.result = "* [[{title}]]\n"
+        self.result = "* [[{title}]]"
         self.postfix = ""
         self.sortkey = None
         self.sortreverse = False
 
-        process_param = lambda x: re.sub(r"^<nowiki>(.*)</nowiki>$", "\\1", x.strip(), flags=re.I | re.DOTALL)
+        process_param = lambda s: re.sub(r"^<nowiki>(.*)</nowiki>$", "\\1", s.strip(), flags=re.I | re.DOTALL)
+        escape_param = lambda s: codecs.escape_decode(bytes(s, "utf-8"))[0].decode("utf-8")
         for param in template.params:
             name = param.name.strip()
             value = process_param(param.value)
@@ -81,13 +83,13 @@ class Processor(object):
             elif name == "verbose":
                 self.flags = self.flags | re.VERBOSE
             elif name == "prefix":
-                self.prefix = value + "\n"
+                self.prefix = escape_param(value) + "\n"
             elif name == "result":
-                self.result = value
+                self.result = escape_param(value)
             elif name == "postfix":
-                self.postfix = "\n" + value
+                self.postfix = "\n" + escape_param(value)
             elif name == "sortkey":
-                self.sortkey = value
+                self.sortkey = escape_param(value)
             elif name == "sortreverse":
                 self.sortreverse = True
             elif name == "done":
@@ -174,7 +176,7 @@ class Processor(object):
         text = text + "\n\n" + result
 
         self.page.text = text
-        self.page.save("Результат сканирования дампа.")
+        self.page.save("Результат сканирования дампа.", minor=False)
 
 def get_dump_date():
     """Iterate through labs dumps and find the newest one."""
