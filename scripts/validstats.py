@@ -15,7 +15,7 @@ from pywikibot.data.api import Request
 
 DEFAULT_SITE = pywikibot.Site()
 
-def get_urlist(site=DEFAULT_SITE, namespace="*", redirects="nonredirects"):
+def get_urlist(site=DEFAULT_SITE, namespace="0|6|10|14|100|828", redirects="nonredirects"):
     """Get list of unreviewed pages."""
     request = Request(site=site,
                       action="query",
@@ -33,7 +33,7 @@ def get_urlist(site=DEFAULT_SITE, namespace="*", redirects="nonredirects"):
             break
     return result
 
-def get_orlist(site=DEFAULT_SITE, namespace="*", redirects="nonredirects"):
+def get_orlist(site=DEFAULT_SITE, namespace="0|6|10|14|100|828", redirects="nonredirects"):
     """Get list of oldreviewed pages."""
     request = Request(site=site,
                       action="query",
@@ -73,8 +73,8 @@ def main():
     stats.append(count("oldreviewedpages", "10"))
     stats.append(count("unreviewedpages", "14"))
     stats.append(count("oldreviewedpages", "14"))
-    stats.append(count("unreviewedpages", "*", "redirects"))
-    stats.append(count("oldreviewedpages", "*", "redirects"))
+    stats.append(count("unreviewedpages", redirects="redirects"))
+    stats.append(count("oldreviewedpages", redirects="redirects"))
 
     with open(sys.argv[1], "a") as statfile:
         statfile.write("\t".join(stats))

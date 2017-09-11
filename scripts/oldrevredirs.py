@@ -8,7 +8,7 @@ TO_FILE = False
 def main():
     """Main script function."""
     site = pywikibot.Site()
-    titles = sorted(validstats.get_orlist(site, "*", "redirects"))
+    titles = sorted(validstats.get_orlist(site, redirects="redirects"))
     text = "\n".join(["* [{{{{fullurl:{title}|action=history}}}} {title}]".format(title=title) for title in titles])
     if TO_FILE:
         output = open("output.txt", "w", encoding="utf-8")
