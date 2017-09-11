@@ -32,17 +32,19 @@
 0 *    * * * jsub -N sandboxes        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/sandbox.py
 0 *    * * * jsub -N fastrfaa         -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/fastrfaa.py $HOME/data/fastrfaa.txt
 0 *    * * * jsub -N techtasks        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/techtasks.py
-# daily
+# several times a day
 30 */6 * * * jsub -N autodumpscan     -quiet -o /$HOME/logs -e /dev/null -mem 2G python3 $HOME/scripts/autodumpscan.py
+# daily
 0 0    * * * jsub -N autopurge-full   -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/autopurge.py --null --hourly --daily --nolog
 0 0    * * * jsub -N validation-stats -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/validstats.py $HOME/data/validation.tsv
 0 1    * * * jsub -N checkwiki        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/cwtrigger.py $HOME/scripts/markers $HOME/data/checkwiki.txt
 # weekly
 0 12   * * 0 jsub -N validation-plots -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/validplots.py $HOME/data/validation.tsv $HOME/data/
-0 12   * * 0 jsub -N oldrev_redirects -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/oldrevredirs.py
+0 12   * * 0 jsub -N oldrev-redirects -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/oldrevredirs.py
 0 0    * * 2 jsub -N tow              -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/tow.py
 0 0    * * 5 jsub -N sort-unrev-files -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/sort_unrev_files.py
 0 0    * * 6 jsub -N afi              -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/afi.py
 # monthly
 0 0    1 * * jsub -N wikidatarefs     -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/wikidatarefs.py
+0 0    2 * * jsub -N dublicate-params -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/paramfix.py
 30 0   4 * * jsub -N fastrfaa-stats   -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/fastrfaa_stats.py $HOME/data/fastrfaa.txt
