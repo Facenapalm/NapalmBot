@@ -51,7 +51,7 @@ def get_orlist(site=DEFAULT_SITE, namespace="0|6|10|14|100|828", redirects="nonr
             break
     return result
 
-def count(listname, namespace="*", redirects="nonredirects"):
+def count(listname, namespace="0|6|10|14|100|828", redirects="nonredirects"):
     """Get element count in list of unreviewed or oldreviewed pages."""
     if listname == "unreviewedpages":
         return str(len(get_urlist(namespace=namespace, redirects=redirects)))
