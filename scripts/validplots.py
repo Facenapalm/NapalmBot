@@ -34,6 +34,18 @@ FILEDESC = """
 
 LOCAL = False # set it to True to deny file uploading
 
+def filter_date(date):
+    """Return x-axis labels based on dates list."""
+    months = ["январь", "февраль", "март", "апрель", "май", "июнь",
+              "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
+    date_parts = date.split("-")
+    if date_parts[2] != "01":
+        return ""
+    if date_parts[1] == "01":
+        return date_parts[0]
+    else:
+        return months[int(date_parts[1]) - 1]
+
 def main():
     """Main script function."""
     argc = len(sys.argv)
@@ -45,22 +57,14 @@ def main():
     else:
         tempcat = sys.argv[2]
 
-    def _filter_date(date):
-        """Return x-axis labels based on dates list."""
-        months = ["январь", "февраль", "март", "апрель", "май", "июнь",
-                  "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
-        date_parts = date.split("-")
-        if date_parts[2] != "01":
-            return ""
-        if date_parts[1] == "01":
-            return date_parts[0]
-        else:
-            return months[int(date_parts[1]) - 1]
-
-    data = [line.strip().split("\t") for line in list(open(fname))[1:]]
+    raw = open(fname).read()
+    data = [line.split("\t") for line in raw.split("\n")[1:-1]]
     data = [list(line) for line in zip(*data)] # transpose data
-    data[0] = [_filter_date(date) for date in data[0]]
+    data[0] = [filter_date(date) for date in data[0]]
     axis = list(range(len(data[0])))
+
+    if not LOCAL:
+        site = pywikibot.Site()
 
     def _plot_pair(title, ufilename, udata, ucolor, ofilename, odata, ocolor):
         """
@@ -92,7 +96,6 @@ def main():
             plt.savefig(filepath, bbox_inches="tight")
 
             if not LOCAL:
-                site = pywikibot.Site()
                 page = pywikibot.FilePage(site, filename)
                 page.upload(filepath, comment="Обновление графика.", text=FILEDESC, ignore_warnings=True)
 
@@ -105,6 +108,12 @@ def main():
             _init_plot(otitle)
         _line_plot(odata, ocolor, "Устаревшие")
         _final_plot(ofilename)
+
+    def _backup_data(pagename):
+        if not LOCAL:
+            page = pywikibot.Page(site, pagename)
+            page.text = "<pre>\n{}\n</pre>".format(raw)
+            page.save("Бекап статистики.")
 
     _plot_pair("статей",
                "validation main unrev.png", data[1], "#027495",
@@ -121,6 +130,7 @@ def main():
     _plot_pair("перенаправлений",
                "validation redirects unrev.png", data[9], "#427322",
                "validation redirects old.png", data[10], "#83A958")
+    _backup_data("User:NapalmBot/validation.tsv")
 
 if __name__ == "__main__":
     main()
