@@ -36,7 +36,10 @@ def process_null(site):
     errors = 0
     for page in members:
         try:
-            page.touch()
+            # if page was deleted while script is working, touch() can create empty page (WHY?!)
+            # temporary pywikibot.Page() object initialization should fix this problem
+            temp = pywikibot.Page(site, page.title())
+            temp.touch()
         except pywikibot.exceptions.LockedPage:
             errors += 1
     return "нулевых правок: " + str(len(members) - errors)
