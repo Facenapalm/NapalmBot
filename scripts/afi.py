@@ -5,6 +5,7 @@ Usage:
     python afi.py
 """
 
+import re
 import random
 import pywikibot
 
@@ -12,7 +13,7 @@ CATEGORY_NAME = "Категория:Википедия:Статьи для ср�
 TEMPLATE_NAME = "Шаблон:Случайные статьи с КУЛ"
 
 TEXT_BEFORE = "{{fmbox|text=<center>Статьи для доработки: "
-TEXT_AFTER = ".</center>}}<noinclude>[[Категория:Навигационные шаблоны:Для обсуждений]]</noinclude>"
+TEXT_AFTER = ".</center>}}"
 
 LIST_LEN = 5
 
@@ -32,7 +33,11 @@ def main():
     text = TEXT_BEFORE + text + TEXT_AFTER
 
     template = pywikibot.Page(site, TEMPLATE_NAME)
-    template.text = text
+    noinclude = re.search(r"<noinclude>(?:[^<]|<(?!noinclude)?)+</noinclude>$", template.text)
+    if noinclude:
+        template.text = text + noinclude.group(0)
+    else:
+        template.text = text
     template.save(COMMENT, minor=False)
 
 if __name__ == "__main__":
