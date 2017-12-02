@@ -38,6 +38,7 @@
 0 0    * * * jsub -N autopurge-daily  -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/autopurge.py --daily --null --nolog
 0 0    * * * jsub -N validation-stats -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/validstats.py $HOME/data/validation.tsv
 0 0    * * * jsub -N tow-update       -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/tow.py
+0 0    * * * jsub -N actual-afd       -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/actual_afd.py
 0 1    * * * jsub -N checkwiki        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/cwtrigger.py $HOME/scripts/markers $HOME/data/checkwiki.txt
 # weekly
 0 12   * * 0 jsub -N validation-plots -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/validplots.py $HOME/data/validation.tsv $HOME/data/
