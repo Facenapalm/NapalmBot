@@ -16,6 +16,7 @@
 # weekly
 0 12   * * 0 jsub -N validation-plots -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/validplots.py $HOME/data/validation.tsv $HOME/data/
 0 12   * * 0 jsub -N oldrev-redirects -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/oldrevredirs.py
+0 0    * * 3 jsub -N userscript-stats -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/userscripts.py
 0 0    * * 5 jsub -N sort-unrev-files -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/sort_unrev_files.py
 0 0    * * 6 jsub -N afi              -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/afi.py
 # monthly
