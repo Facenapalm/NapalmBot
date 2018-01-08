@@ -4,7 +4,7 @@ import pywikibot
 from checkwiki import load_page_list, mark_error_done, log
 
 NUMBER = "1"
-REGEXP = r"\{\{\s*Шаблон\s*:"
+REGEXP = r"\{\{\s*(?:Шаблон|Template|Ш|T)\s*:"
 FLAGS = re.I
 
 def main():
