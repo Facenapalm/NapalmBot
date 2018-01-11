@@ -4,7 +4,6 @@ import pywikibot
 from checkwiki import load_page_list, check_tag_balance, mark_error_done, log
 
 NUMBER = "94"
-FLAGS = re.I
 
 def main():
     """Main script function."""

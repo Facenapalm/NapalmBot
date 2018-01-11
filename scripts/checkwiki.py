@@ -796,7 +796,9 @@ def error_080_ext_link_with_br(text):
     (text, broken) = allsubn(r"(\[https?://[^\[\]]*?)\n([^\[\]]*?\])", "\\1 \\2",
                              text, flags=re.I)
     (text, inlist) = re.subn(r"^(\*[ ]*\[https?://[^\[\]\n]*)$", "\\1]", text, flags=re.I | re.M)
-    return (text, inref + inlist + broken)
+    (text, temp) = re.subn(r"(\|\s*сайт\s*=\s*\[https?://[^\[\]\{\}\|\n]+)(\s*[\}\|])",
+                           "\\1]\\2", text, flags=re.I)
+    return (text, inref + inlist + broken + temp)
 
 def error_085_empty_tag(text):
     """Fix some cases and return (new_text, replacements_count) tuple."""
