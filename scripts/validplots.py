@@ -90,7 +90,7 @@ def main():
             """Iternal function for plot saving and uploading."""
             filepath = os.path.join(tempcat, filename)
             if single:
-                plt.legend()
+                plt.legend(loc=2)
             plt.margins(0, 0.02)
             plt.subplots_adjust(left=0.05, right=1, top=1, bottom=0.1)
             plt.savefig(filepath, bbox_inches="tight")
@@ -116,20 +116,20 @@ def main():
             page.save("Бекап статистики.")
 
     _plot_pair("статей",
-               "validation main unrev.png", data[1], "#027495",
-               "validation main old.png", data[2], "#01A9C1")
+               "validation main unrev.png", data[1], "#2A4B8D",
+               "validation main old.png", data[2], "#3366CC")
     _plot_pair("файлов",
-               "validation files unrev.png", data[3], "#D82488",
-               "validation files old.png", data[4], "#EC7BCD")
+               "validation files unrev.png", data[3], "#B32424",
+               "validation files old.png", data[4], "#DD3333")
     _plot_pair("шаблонов",
-               "validation templates unrev.png", data[5], "#6A2B00",
-               "validation templates old.png", data[6], "#AA5A01")
+               "validation templates unrev.png", data[5], "#72777D",
+               "validation templates old.png", data[6], "#A2A9B1")
     _plot_pair("категорий",
-               "validation categories.png", data[7], "#FB7E00",
-               "validation categories.png", data[8], "#FECD42")
+               "validation categories.png", data[7], "#AC6600",
+               "validation categories.png", data[8], "#FFCC33")
     _plot_pair("перенаправлений",
-               "validation redirects unrev.png", data[9], "#427322",
-               "validation redirects old.png", data[10], "#83A958")
+               "validation redirects unrev.png", data[9], "#14866D",
+               "validation redirects old.png", data[10], "#00AF89")
     _backup_data("User:NapalmBot/validation.tsv")
 
 if __name__ == "__main__":
