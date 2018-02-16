@@ -4,7 +4,7 @@ import pywikibot
 from checkwiki import load_page_list, mark_error_done, log
 
 NUMBER = "8"
-REGEXP = r"^==.*[^=\n]$"
+REGEXP = r"^==.*[^=\n]{2}$"
 FLAGS = re.I | re.M
 
 def main():
