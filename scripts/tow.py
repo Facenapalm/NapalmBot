@@ -61,7 +61,10 @@ def archive(site, local, original):
             match = re.match(r"\[\[(.*?)[\]|]", local)
             if match is None:
                 return
-            if not pywikibot.Page(site, match.group(0)).exists():
+            try:
+                if pywikibot.Page(site, match.group(1)).exists():
+                    return
+            except:
                 return
     else:
         local = ARCHIVE_DEFAULT
