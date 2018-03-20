@@ -25,6 +25,11 @@ REGEXP = re.compile(r"""
     )
 """, re.I | re.VERBOSE)
 
+PROCEED_FAST = [
+    "Рейму Хакурей",
+    "QBA-II-bot"
+]
+
 TIME_FORMAT = "%Y%m%d%H%M%S"
 UTCNOW = datetime.utcnow()
 UTCNOWSTR = UTCNOW.strftime(TIME_FORMAT)
@@ -64,7 +69,7 @@ def correct_request(match):
 
     # wrong header fix
     question = re.search(r"\|\s*вопрос\s*=(.*)", section)
-    timestamp = re.search(r"\|\s*автор\s*=[^/]+/\s*(\d{14})", section)
+    timestamp = re.search(r"\|\s*автор\s*=[^/\n]+/\s*(\d{14})", section)
     if question is None or timestamp is None:
         # request is completely broken
         return match.group(0)
@@ -101,12 +106,12 @@ def delete_old_request(match):
     """Process one table row and delete it if it's neccessary."""
     template = match.group("template")
     status_match = re.search(r"\|\s*статус\s*=\s*([+-])", template)
-    date_match = re.search(r"\|\s*автор\s*=[^/]+/\s*(\d{14})", template)
+    author_match = re.search(r"\|\s*автор\s*=([^/\n]+)/\s*(\d{14})", template)
     admin_match = re.search(r"\|\s*администратор\s*=([^/\n]+)/\s*(\d{14})", template)
     if admin_match is None:
         # request is still open
-        if date_match is not None:
-            date = datetime.strptime(date_match.group(1), TIME_FORMAT)
+        if author_match is not None:
+            date = datetime.strptime(author_match.group(2), TIME_FORMAT)
             if (UTCNOW - date).total_seconds() > 7 * 24 * 60 * 60:
                 # very old request that should be moved to rfaa
                 move_old_request(template)
@@ -116,10 +121,14 @@ def delete_old_request(match):
         done = True
     else:
         done = status_match.group(1) == "+"
+    author = author_match.group(1).strip()
     admin = admin_match.group(1).strip()
     date_str = admin_match.group(2)
 
-    delay = (1 if done else 3) * 24 * 60 * 60
+    if author in PROCEED_FAST:
+        delay = (12 if done else 24) * 60 * 60
+    else:
+        delay = (1 if done else 3) * 24 * 60 * 60
     date = datetime.strptime(date_str, TIME_FORMAT)
     if (UTCNOW - date).total_seconds() < delay:
         return match.group(0)
