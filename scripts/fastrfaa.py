@@ -25,10 +25,10 @@ REGEXP = re.compile(r"""
     )
 """, re.I | re.VERBOSE)
 
-PROCEED_FAST = [
-    "Рейму Хакурей",
-    "QBA-II-bot"
-]
+CONFIGURATION = {
+    # nickname or "*" for any: [done delay, undone delay, period of moving to rfaa]
+    "*": [24, 3 * 24, 7 * 24]
+}
 
 TIME_FORMAT = "%Y%m%d%H%M%S"
 UTCNOW = datetime.utcnow()
@@ -45,6 +45,28 @@ if len(sys.argv) > 1:
     LOGFILE = open(sys.argv[1], "a", encoding="utf-8")
 else:
     LOGFILE = None
+
+
+
+def load_configuration(config_text):
+    """Load configuration and set individual delays."""
+    for line in config_text.split("\n"):
+        try:
+            if re.match(r"^(#|</?pre>)", line):
+                continue
+            parsed = [value.strip() for value in line.split("/")]
+            if len(parsed) != 4:
+                continue
+            CONFIGURATION[parsed[0]] = [int(value) for value in parsed[1:]]
+        except:
+            continue
+
+def get_delays(user="*"):
+    """Get delays for current user from configuration."""
+    if user in CONFIGURATION:
+        return CONFIGURATION[user]
+    else:
+        return CONFIGURATION["*"]
 
 def minor_fixes(text):
     """Fix some minor errors before processing the page."""
@@ -98,50 +120,56 @@ def move_old_request(template):
         header = parts[0]
     MOVED_TEXT += "== {} (с ЗКАБ) ==\n".format(header)
     MOVED_TEXT += re.sub(r"(ЗКА:Быстрый запрос)", "subst:\\1", template)
-    MOVED_TEXT += "\n* {{block-small|Перенесено со страницы быстрых запросов ботом, поскольку запрос не был выполнен в течение 7 дней. ~~~~}}"
+    MOVED_TEXT += "\n* {{block-small|Перенесено со страницы быстрых запросов ботом," \
+                + " поскольку запрос не был выполнен в течение 7 дней. ~~~~}}"
     MOVED_TEXT += "\n\n"
     MOVED_COUNT += 1
 
 def delete_old_request(match):
     """Process one table row and delete it if it's neccessary."""
     template = match.group("template")
-    status_match = re.search(r"\|\s*статус\s*=\s*([+-])", template)
-    author_match = re.search(r"\|\s*автор\s*=([^/\n]+)/\s*(\d{14})", template)
-    admin_match = re.search(r"\|\s*администратор\s*=([^/\n]+)/\s*(\d{14})", template)
-    if admin_match is None:
+    status = re.search(r"\|\s*статус\s*=\s*([+-])", template)
+    author = re.search(r"\|\s*автор\s*=([^/\n]+)/\s*(\d{14})", template)
+    admin = re.search(r"\|\s*администратор\s*=([^/\n]+)/\s*(\d{14})", template)
+
+    extract_name = lambda m: m.group(1).strip()
+    extract_date = lambda m: datetime.strptime(m.group(2), TIME_FORMAT)
+    check_delay = lambda date, delay: delay >= 0 and (UTCNOW - date).total_seconds() >= delay * 60 * 60
+
+    if author is None:
+        delays = get_delays()
+    else:
+        delays = get_delays(extract_name(author))
+
+    if admin is None:
         # request is still open
-        if author_match is not None:
-            date = datetime.strptime(author_match.group(2), TIME_FORMAT)
-            if (UTCNOW - date).total_seconds() > 7 * 24 * 60 * 60:
+        if author is not None:
+            if check_delay(extract_date(author), delays[2]):
                 # very old request that should be moved to rfaa
                 move_old_request(template)
                 return ""
-        return match.group(0)
-    if status_match is None:
-        done = True
     else:
-        done = status_match.group(1) == "+"
-    author = author_match.group(1).strip()
-    admin = admin_match.group(1).strip()
-    date_str = admin_match.group(2)
-
-    if author in PROCEED_FAST:
-        delay = (12 if done else 24) * 60 * 60
-    else:
-        delay = (1 if done else 3) * 24 * 60 * 60
-    date = datetime.strptime(date_str, TIME_FORMAT)
-    if (UTCNOW - date).total_seconds() < delay:
-        return match.group(0)
-    else:
-        if done:
-            global DELETED_DONE_COUNT
-            DELETED_DONE_COUNT += 1
+        # request is closed
+        if status is None:
+            done = True
         else:
-            global DELETED_UNDONE_COUNT
-            DELETED_UNDONE_COUNT += 1
-        if LOGFILE:
-            LOGFILE.write("{}/{}\n".format(admin, date_str))
-        return ""
+            done = status.group(1) == "+"
+        if done:
+            delay = delays[0]
+        else:
+            delay = delays[1]
+        if check_delay(extract_date(admin), delay):
+            # archiving
+            if done:
+                global DELETED_DONE_COUNT
+                DELETED_DONE_COUNT += 1
+            else:
+                global DELETED_UNDONE_COUNT
+                DELETED_UNDONE_COUNT += 1
+            if LOGFILE:
+                LOGFILE.write("{}/{}\n".format(extract_name(admin), admin.group(2)))
+            return ""
+    return match.group(0)
 
 def form_comment():
     """Analyze global variables and form a comment for an edit."""
@@ -174,6 +202,10 @@ def form_comment():
 def main():
     """Main script function."""
     site = pywikibot.Site()
+    config = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые/Конфигурация")
+    if config.exists():
+        load_configuration(config.text)
+
     fast = pywikibot.Page(site, "Википедия:Запросы к администраторам/Быстрые")
     ftext = fast.text
 
