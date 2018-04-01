@@ -302,6 +302,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
 
     lines.append("…составленные по личной просьбе:")
     lines.append("* [[Участник:NapalmBot/файлы/Ле Лою|Ле Лоя]] (автоматически не обновляется)")
+    lines.append("* [[Участник:NapalmBot/файлы/Deltahead|Deltahead]] (автоматически не обновляется)")
 
     lines.append("Если вы не нашли в списке интересующую вас тематику — [[ОУ:Facenapalm|напишите ботоводу]].")
     lines.append("")
