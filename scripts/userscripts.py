@@ -57,7 +57,7 @@ def main():
     result = "Последнее обновление: {{subst:#time:j xg Y, H:i}}\n\n"
     result += "{| class=\"wikitable sortable\"\n"
     result += "! Место !! Скрипт !! Использований\n"
-    formatstr = "|-\n| {num} || [[Участник:{page}]] || [https://ru.wikipedia.org/w/index.php?search=insource%3A%22{page}%22+prefix%3Au%3A {count}]\n"
+    formatstr = "|-\n| {num} || [[Участник:{page}]] || [https://ru.wikipedia.org/w/index.php?search=user%3A+insource%3A%22{page}%22 {count}]\n"
     for num, page in enumerate(sorted(sorted(stats), key=stats.get, reverse=True)):
         count = stats[page]
         result += formatstr.format(num=num + 1, page=page, count=count)
