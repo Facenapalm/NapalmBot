@@ -283,7 +283,7 @@ def process_link_as_external(text, lang_code=LANG_CODE):
     Used in 90th and 91st errors.
     """
     lang_code = "(" + lang_code + ")"
-    prefix = r"\[https?://{}\.(?:m\.)?wikipedia\.org/(?:w|wiki)/".format(lang_code)
+    prefix = r"\[(?:https?:)?//{}\.(?:m\.)?wikipedia\.org/(?:w|wiki)/".format(lang_code)
     suffix = r"\]"
 
     count_before = len(re.findall(prefix, text))
@@ -761,7 +761,7 @@ def error_068_interwiki_link(text):
     # bot will not fix links without a pipe: manual control needed
     (text, direct) = re.subn(r"(\[\[):{}:([^|\[\]\n]+\|[^|\[\]\n]+\]\])".format(LANG_CODE),
                              _check_link, text, flags=re.I)
-    (text, books) = re.subn(r"\[\[:..:Special:BookSources/\d+X?\|(ISBN [0-9\-X]+)\]\]",
+    (text, books) = re.subn(r"\[\[:[a-z\-]+:Special:BookSources/\d+X?\|(ISBN [0-9\-X]+)\]\]",
                             "\\1", text, flags=re.I)
     return (text, direct + books)
 
@@ -786,8 +786,8 @@ def error_069_isbn_wrong_syntax(text):
     return (text, count1 + count2 + count3 + count4)
 
 def error_070_isbn_wrong_length(text):
-    """Fix russian Х/х instead of english X."""
-    return re.subn(r"((?:ISBN |\|isbn\s*=\s*)(?:[0-9]-?){9})Х", "\\1X", text, flags=re.I)
+    """Fix russian Х/х instead of english X and — instead of -."""
+    return re.subn(r"((?:ISBN |\|\s*isbn\s*=\s*)(?:[0-9]-?){9})Х", "\\1X", text)
 
 def error_080_ext_link_with_br(text):
     """Fix the error and return (new_text, replacements_count) tuple."""
