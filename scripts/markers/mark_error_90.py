@@ -4,7 +4,7 @@ import pywikibot
 from checkwiki import load_page_list, mark_error_done, log
 
 NUMBER = "90"
-REGEXP = r"https?://ru\.(?:m\.)?wikipedia\.org/w"
+REGEXP = r"//ru\.(?:m\.)?wikipedia\.org/w"
 FLAGS = re.I
 
 def main():
