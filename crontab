@@ -1,8 +1,10 @@
 # m h  dom mon dow   command
 
+# several times a hour
+5-55/5 * * * * jsub -N sandbox-noclr  -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/sandbox.py --noclear
 # hourly
 0 *    * * * jsub -N autopurge-hourly -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/autopurge.py --hourly --nolog
-0 *    * * * jsub -N sandboxes        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/sandbox.py
+0 *    * * * jsub -N sandbox          -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/sandbox.py
 0 *    * * * jsub -N fastrfaa         -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/fastrfaa.py $HOME/data/fastrfaa.txt
 0 *    * * * jsub -N techtasks        -quiet -o /dev/null -e /dev/null python3 $HOME/scripts/techtasks.py
 # several times a day
