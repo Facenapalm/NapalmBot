@@ -15,6 +15,7 @@ DEFAULT_SITE = pywikibot.Site()
 TALK_NS = [
     "Обсуждение",
     "Обсуждение участника",
+    "Обсуждение участницы",
     "Обсуждение Википедии",
     "Обсуждение файла",
     "Обсуждение шаблона",
@@ -42,10 +43,23 @@ def get_pages_categories(pagelist, site=DEFAULT_SITE, limit=500):
         request = Request(site=site, **kwargs)
         while True:
             answer = request.submit()
+
+            # Wikipedia API can return page list in non-canonical form!
+            # At least when there are two possible canonical forms for one namespace
+            # (for instance, "Участник" – "Участница" in Russian Wikipedia).
+            # This query will normalize them and we need to handle it.
+            denormalize = {}
+            if "normalized" in answer["query"]:
+                for fix in answer["query"]["normalized"]:
+                    denormalize[fix["to"]] = fix["from"]
+
             for value in answer["query"]["pages"].values():
+                title = value["title"]
+                if title in denormalize:
+                    title = denormalize[title]
                 if "categories" in value:
                     cats = [cat["title"] for cat in value["categories"]]
-                    result[value["title"]] = result[value["title"]] + cats
+                    result[title] = result[title] + cats
             if "query-continue" in answer:
                 request["clcontinue"] = answer["query-continue"]["categories"]["clcontinue"]
                 continue
@@ -277,7 +291,7 @@ def sort_info(info, metapage, site=DEFAULT_SITE):
     lines.append(_select_from_namespaces("из порталов", ["Портал"]))
     lines.append(_select_from_namespaces("из проектов", ["Проект"]))
     lines.append(_select_from_namespaces("из ПИ Википедия", ["Википедия"]))
-    lines.append(_select_from_namespaces("со страниц участников", ["Участник"]))
+    lines.append(_select_from_namespaces("со страниц участников", ["Участник", "Участница"]))
     lines.append(_select_from_namespaces("из обсуждений", TALK_NS))
 
     lines.append("…по расширению:")
