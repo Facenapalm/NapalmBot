@@ -647,7 +647,7 @@ def error_052_category_in_article(text):
     if len(categories) == 0:
         return (text, 0)
 
-    insert_pos = re.search(r"(?:\[\[[A-Za-z\-]+:[^\[\]\n]+\]\]\s*)*$", text).start(0)
+    insert_pos = re.search(r"(?:\[\[[A-Za-z\-]{2,}:[^\[\]\n]+\]\]\s*)*$", text).start(0)
     # we must to insert categories before interwikis
     prefix = text[:insert_pos].rstrip()
     interwikis = text[insert_pos:]
