@@ -105,7 +105,7 @@ def primary_check(redirect, target):
             return True
 
     # persones redirect
-    match = re.match(r"^([а-яё]+), ([а-яё]+) ([а-яё]{4,})$", target, flags=re.I)
+    match = re.match(r"^([а-яё\-]+), ([а-яё]+) ([а-яё]{4,})$", target, flags=re.I)
     if match:
         candidates = [
             "{surname} {name} {fathername}",
@@ -120,7 +120,7 @@ def primary_check(redirect, target):
                                                   fathername=match.group(3))):
                 return True
 
-    match = re.match(r"^([а-яё]+), ([а-яё]+)$", target, flags=re.I)
+    match = re.match(r"^([а-яё\-]+), ([а-яё]+)(?:| де| фон)$", target, flags=re.I)
     if match:
         candidates = [
             "{surname} {name}",
