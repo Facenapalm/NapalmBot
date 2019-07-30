@@ -37,9 +37,9 @@ DAYS = 365 # -1 to draw plot using all data
 
 def filter_date(date):
     """Return x-axis labels based on dates list."""
-    if date[:2] != "01":
+    if date[-2:] != "01":
         return ""
-    return date[3:]
+    return date[:7]
 
 def main():
     """Main script function."""
