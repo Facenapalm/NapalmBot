@@ -59,7 +59,7 @@ def main():
     pagelines = []
     pagelines.append("\n\n== Статистика за {} ==".format(month))
     for count, admin in statarray:
-        pagelines.append("# [[У:{admin}|]] ({count} {{{{subst:plural:{count}|итог|итога|итогов}}}})".format(admin=admin, count=count))
+        pagelines.append("# {{{{noping|{admin}}}}} ({count} {{{{subst:plural:{count}|итог|итога|итогов}}}})".format(admin=admin, count=count))
     pagelines.append("Отправлено ~~~~")
 
     site = pywikibot.Site()

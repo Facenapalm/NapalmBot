@@ -33,18 +33,13 @@ FILEDESC = """
 """
 
 LOCAL = False # set it to True to deny file uploading
+DAYS = 365 # -1 to draw plot using all data
 
 def filter_date(date):
     """Return x-axis labels based on dates list."""
-    months = ["январь", "февраль", "март", "апрель", "май", "июнь",
-              "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"]
-    date_parts = date.split("-")
-    if date_parts[2] != "01":
+    if date[-2:] != "01":
         return ""
-    if date_parts[1] == "01":
-        return date_parts[0]
-    else:
-        return months[int(date_parts[1]) - 1]
+    return date[:7]
 
 def main():
     """Main script function."""
@@ -60,6 +55,8 @@ def main():
     raw = open(fname).read()
     data = [line.split("\t") for line in raw.split("\n")[1:-1]]
     data = [list(line) for line in zip(*data)] # transpose data
+    if DAYS != -1:
+        data = [line[-DAYS:] for line in data]
     data[0] = [filter_date(date) for date in data[0]]
     axis = list(range(len(data[0])))
 
@@ -97,7 +94,10 @@ def main():
 
             if not LOCAL:
                 page = pywikibot.FilePage(site, filename)
-                page.upload(filepath, comment="Обновление графика.", text=FILEDESC, ignore_warnings=True)
+                page.upload(filepath,
+                            comment="Обновление графика.",
+                            text=FILEDESC,
+                            ignore_warnings=True)
 
                 os.remove(filepath)
 
