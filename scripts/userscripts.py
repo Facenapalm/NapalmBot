@@ -62,7 +62,6 @@ def main():
         count = stats[page]
         result += formatstr.format(num=num + 1, page=page, count=count)
     result += "|}\n\n"
-    result += "<noinclude>[[Категория:Википедия:Механизмы, обрабатываемые NapalmBot]]</noinclude>"
 
     page = pywikibot.Page(site, "Участник:NapalmBot/Самые используемые скрипты")
     page.text = result

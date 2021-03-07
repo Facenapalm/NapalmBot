@@ -2,9 +2,7 @@
 
 import pywikibot
 
-TEXT = """#REDIRECT [[Википедия:К удалению/{{subst:#time:j xg Y}}]]
-
-[[Категория:Википедия:Механизмы, обрабатываемые NapalmBot]]"""
+TEXT = """#REDIRECT [[Википедия:К удалению/{{subst:#time:j xg Y}}]]"""
 
 def main():
     """Main script function."""

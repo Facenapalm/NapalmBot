@@ -1,7 +1,6 @@
 """Fix dublicate params in templates."""
 import pywikibot
 import mwparserfromhell
-import checkwiki
 
 CATEGORY = "Категория:Страницы, использующие повторяющиеся аргументы в вызовах шаблонов"
 COMMENT = "Исправление повторяющихся параметров в шаблонах."
@@ -46,11 +45,9 @@ def fix_page(page):
                 data[name].append(current)
                 idx += 1
     if fixed:
-        (text, fixes) = checkwiki.process_text(str(code))
         try:
             page.text = text
             page.save(COMMENT)
-            checkwiki.mark_error_list_done(fixes, page.title())
         except pywikibot.exceptions.Error:
             pass
 
