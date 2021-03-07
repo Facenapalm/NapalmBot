@@ -20,6 +20,25 @@ COMMENT = "Автоматическое обновление списка тех
 LOG = True
 LOG_FORMAT = "Processed {done} out of {count} pages ({percentage} %)."
 
+IGNORE_FILTER = re.compile(r"""(
+    <!--.*?-->|
+
+    <nowiki>.*?</nowiki>|
+    <nowiki\s*/>|
+
+    <math>.*?</math>|
+    <hiero>.*?</hiero>|
+
+    <tt>.*?</tt>|
+    <code>.*?</code>|
+    <pre>.*?</pre>|
+    <source[^>]*>.*?</source>|
+    <syntaxhighlight[^>]*>.*?</syntaxhighlight>|
+
+    <templatedata>.*?</templatedata>|
+    <imagemap>.*?</imagemap>
+)""", re.I | re.DOTALL | re.VERBOSE)
+
 LABEL_PREFIX = "\x01"
 LABEL_SUFFIX = "\x02"
 

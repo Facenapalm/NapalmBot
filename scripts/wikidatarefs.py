@@ -1,11 +1,30 @@
 """Add missing references section to pages with refs, comes from wikidata."""
 
+import re
 import pywikibot
 
 CATEGORY = "Категория:Википедия:Статьи с источниками из Викиданных"
 TEMPLATE = "Шаблон:Примечания"
 COMMENT = "Исправление отсутствующей секции примечаний."
 
+IGNORE_FILTER = re.compile(r"""(
+    <!--.*?-->|
+
+    <nowiki>.*?</nowiki>|
+    <nowiki\s*/>|
+
+    <math>.*?</math>|
+    <hiero>.*?</hiero>|
+
+    <tt>.*?</tt>|
+    <code>.*?</code>|
+    <pre>.*?</pre>|
+    <source[^>]*>.*?</source>|
+    <syntaxhighlight[^>]*>.*?</syntaxhighlight>|
+
+    <templatedata>.*?</templatedata>|
+    <imagemap>.*?</imagemap>
+)""", re.I | re.DOTALL | re.VERBOSE)
 
 LABEL_PREFIX = "\x01"
 LABEL_SUFFIX = "\x02"
